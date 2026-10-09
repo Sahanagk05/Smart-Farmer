@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#1a5c2a">
+<title>Smart Farmer Assistant</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--g:#1a5c2a;--g2:#2e7d32;--g3:#43a047;--lite:#c8e6c9;--amb:#e65100;--amb2:#ff8f00;--bl:#0d47a1;--card:#fff;--bdr:#a5d6a7;--txt:#1b2a1b;--mut:#5a7a5a;}
+html,body{background:#c8e6c9 !important;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#c8e6c9 !important;color:var(--txt);min-height:100vh;overflow-x:hidden;}
+#app,#mainMenu,.mwrap{background:#c8e6c9 !important;}
+.panel{background:#c8e6c9 !important;}
+
+/* SPLASH */
+#splash{position:fixed;inset:0;background:linear-gradient(155deg,#0d2b10,#1a5c2a,#2e7d32);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;padding:20px;}
+.slogo{font-size:60px;margin-bottom:6px;animation:fl 3s ease-in-out infinite;}
+@keyframes fl{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+#splash h1{color:#fff;font-size:23px;text-align:center;font-weight:700;margin-bottom:4px;}
+#splash p{color:#a5d6a7;font-size:12px;text-align:center;margin-bottom:24px;line-height:1.6;}
+.mring{width:76px;height:76px;border-radius:50%;background:rgba(255,255,255,.15);border:3px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:30px;cursor:pointer;margin-bottom:10px;transition:transform .2s;}
+.mring:hover{transform:scale(1.08);}
+.mring.pulse{animation:pulse 1.2s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.4);}50%{box-shadow:0 0 0 20px rgba(255,255,255,0);}}
+#vp{color:#c8e6c9;font-size:12px;text-align:center;margin-bottom:18px;min-height:16px;}
+.lgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:320px;}
+.lc{background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.3);border-radius:14px;padding:13px 10px;text-align:center;cursor:pointer;transition:all .2s;}
+.lc:hover,.lc.s{background:rgba(255,255,255,.9);border-color:#fff;}
+.lc:hover .ln,.lc.s .ln{color:var(--g);}
+.lc:hover .ls,.lc.s .ls{color:#33691e;}
+.ln{color:#fff;font-size:18px;font-weight:700;display:block;}
+.ls{color:#a5d6a7;font-size:11px;display:block;margin-top:2px;}
+.lc.full{grid-column:1/-1;}
+
+/* APP */
+#app{display:none;}
+.topbar{background:var(--g);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.topbar h1{font-size:16px;font-weight:700;}
+.tbr{display:flex;gap:8px;}
+.tbtn{background:rgba(255,255,255,.2);border:none;color:#fff;padding:5px 10px;border-radius:20px;cursor:pointer;font-size:11px;}
+
+/* MENU */
+.mwrap{padding:12px;}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.mb{background:var(--card);border:2px solid var(--bdr);border-radius:16px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .2s;}
+.mb:hover{background:#e8f5e9;border-color:var(--g);transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1);}
+.mb .ico{font-size:34px;display:block;margin-bottom:5px;}
+.mb .lbl{font-size:13px;font-weight:700;color:var(--g);}
+.mb .sub{font-size:10px;color:var(--mut);margin-top:2px;}
+
+/* PANELS */
+.panel{display:none;padding:12px 12px 90px;}
+.panel.active{display:block;}
+.phd{font-size:17px;font-weight:700;color:var(--g);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.back{background:transparent;border:1.5px solid var(--g);color:var(--g);padding:6px 12px;border-radius:10px;cursor:pointer;font-size:12px;margin-bottom:10px;display:inline-flex;align-items:center;gap:4px;}
+
+/* CAT TABS */
+.ctabs{display:flex;gap:7px;margin-bottom:10px;overflow-x:auto;padding-bottom:3px;}
+.ctab{background:var(--card);border:1.5px solid var(--bdr);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;color:var(--mut);flex-shrink:0;}
+.ctab.a{background:var(--g);border-color:var(--g);color:#fff;}
+
+/* CROP GRID */
+.cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.cc{background:var(--card);border:2px solid var(--bdr);border-radius:12px;padding:8px 5px;text-align:center;cursor:pointer;transition:all .2s;}
+.cc:hover,.cc.sel{border-color:var(--g);background:#e8f5e9;}
+.ce{font-size:34px;display:block;margin-bottom:3px;}
+.cn{font-size:11px;font-weight:700;color:var(--g);}
+.cl{font-size:9px;color:var(--mut);margin-top:1px;}
+
+/* ACRES */
+.abox{background:var(--card);border:2px solid var(--bdr);border-radius:12px;padding:12px;margin-bottom:12px;}
+.abox label{font-size:12px;font-weight:700;color:var(--txt);display:block;margin-bottom:7px;}
+.arow{display:flex;align-items:center;gap:8px;}
+.arow input{flex:1;padding:11px;border:1.5px solid var(--bdr);border-radius:8px;font-size:20px;font-weight:700;color:var(--g);text-align:center;}
+.arow input:focus{outline:none;border-color:var(--g);}
+.abtns{display:flex;flex-direction:column;gap:5px;}
+.ab{background:var(--g);color:#fff;border:none;width:34px;height:34px;border-radius:7px;font-size:18px;cursor:pointer;}
+
+/* SEASON */
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.sc{background:var(--card);border:2px solid var(--bdr);border-radius:12px;padding:10px 6px;text-align:center;cursor:pointer;transition:all .2s;}
+.sc:hover,.sc.sel{border-color:var(--amb2);background:#fff8e1;}
+.si{font-size:26px;display:block;margin-bottom:3px;}
+.sn{font-size:11px;font-weight:700;color:var(--amb);}
+.sd{font-size:9px;color:var(--mut);margin-top:2px;}
+
+/* RESULTS GRID */
+.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.rc{background:var(--card);border-radius:12px;padding:12px;border-left:4px solid var(--g);box-shadow:0 2px 6px rgba(0,0,0,.05);}
+.rc.amb{border-left-color:var(--amb);}
+.rc.bl{border-left-color:var(--bl);}
+.rc.pur{border-left-color:#7b1fa2;}
+.rc.red{border-left-color:#c62828;}
+.ri{font-size:20px;margin-bottom:3px;}
+.rl{font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;}
+.rv{font-size:18px;font-weight:700;color:var(--g);margin-top:2px;}
+.rv.amb{color:var(--amb);}
+.rv.bl{color:var(--bl);}
+.rv.pur{color:#7b1fa2;}
+.rv.red{color:#c62828;}
+.rs{font-size:10px;color:var(--mut);margin-top:2px;}
+
+/* SOIL CARD */
+.soil-card{background:#fff8e1;border-radius:12px;padding:14px;margin-bottom:12px;border-left:4px solid #ff8f00;}
+.soil-title{font-size:13px;font-weight:700;color:var(--amb);margin-bottom:8px;}
+.soil-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.soil-ico{font-size:20px;flex-shrink:0;}
+.soil-key{font-size:11px;font-weight:700;color:var(--txt);}
+.soil-val{font-size:12px;color:var(--mut);margin-top:1px;}
+.soil-badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;margin-top:4px;}
+.sb-good{background:#e8f5e9;color:var(--g);}
+.sb-med{background:#fff8e1;color:#e65100;}
+.sb-poor{background:#ffebee;color:#c62828;}
+
+/* QUALITY CARD */
+.qual-card{background:var(--card);border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 2px 6px rgba(0,0,0,.06);}
+.qual-title{font-size:13px;font-weight:700;color:#7b1fa2;margin-bottom:8px;}
+.grade-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.grade-badge{font-size:22px;font-weight:700;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.gA{background:#e8f5e9;color:#1b5e20;}
+.gB{background:#fff8e1;color:#e65100;}
+.gC{background:#ffebee;color:#c62828;}
+.grade-info{flex:1;}
+.grade-name{font-size:14px;font-weight:700;color:var(--txt);}
+.grade-price{font-size:12px;color:var(--mut);margin-top:2px;}
+.grade-tip{font-size:11px;color:#7b1fa2;margin-top:3px;}
+
+/* FERTILIZER */
+.fcard{background:var(--card);border-radius:12px;padding:12px;margin-bottom:8px;box-shadow:0 2px 5px rgba(0,0,0,.05);}
+.fwk{font-size:11px;font-weight:700;color:var(--amb);text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px;}
+.fitem{display:flex;align-items:flex-start;gap:8px;margin-bottom:7px;padding-bottom:7px;border-bottom:1px solid #f5f5f5;}
+.fitem:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.fico{font-size:20px;flex-shrink:0;}
+.fn{font-size:13px;font-weight:700;color:var(--txt);}
+.fq{font-size:11px;color:var(--amb);font-weight:700;margin-top:2px;}
+.ft{font-size:10px;color:var(--mut);margin-top:2px;}
+.obadge{display:inline-block;background:#e8f5e9;color:var(--g);font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;margin-top:3px;}
+
+/* FORMS */
+.fg{margin-bottom:11px;}
+.fg label{display:block;font-size:12px;font-weight:700;color:var(--txt);margin-bottom:5px;}
+.fg input,.fg select{width:100%;padding:11px;border:1.5px solid var(--bdr);border-radius:9px;font-size:14px;color:var(--txt);}
+.fg input:focus,.fg select:focus{outline:none;border-color:var(--g);}
+.mic2{width:100%;background:var(--g);color:#fff;border:none;padding:11px;border-radius:11px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:9px;}
+.sbtn{width:100%;background:var(--g2);color:#fff;border:none;padding:13px;border-radius:11px;font-size:16px;font-weight:700;cursor:pointer;margin-top:6px;}
+.sbtn:hover{background:var(--g);}
+
+/* RECORDS */
+.crec{background:var(--card);border-radius:12px;padding:12px;margin-bottom:8px;border-left:4px solid var(--g);box-shadow:0 2px 5px rgba(0,0,0,.05);}
+.crt{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.cri{font-size:30px;}
+.crn{font-size:16px;font-weight:700;color:var(--g);}
+.crse{font-size:11px;color:var(--mut);}
+.crgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:7px;}
+.cri2{background:var(--lite);border-radius:7px;padding:5px 8px;}
+.crl{font-size:9px;color:var(--mut);font-weight:700;}
+.crv{font-size:12px;font-weight:700;color:var(--txt);}
+.crp{font-size:18px;font-weight:700;color:var(--g);margin-top:5px;}
+.crp.loss{color:#c62828;}
+.dbtn{background:transparent;border:1px solid #ef9a9a;color:#c62828;padding:3px 9px;border-radius:7px;cursor:pointer;font-size:10px;margin-top:5px;}
+
+/* MARKET */
+.pcard{background:var(--card);border-radius:12px;padding:11px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 5px rgba(0,0,0,.04);}
+.pi{font-size:30px;}
+.pinfo{flex:1;}
+.pn{font-size:14px;font-weight:700;color:var(--txt);}
+.pr{font-size:11px;color:var(--mut);margin-top:2px;}
+.pa{font-size:20px;font-weight:700;color:var(--amb);}
+.msp-badge{font-size:10px;background:#e3f2fd;color:var(--bl);padding:2px 7px;border-radius:8px;display:inline-block;margin-top:3px;}
+
+/* AI */
+.acard{background:#fff8e1;border-radius:12px;padding:12px;margin-bottom:8px;border-left:4px solid var(--amb2);}
+.al{font-size:10px;font-weight:700;color:var(--amb);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
+.av{font-size:24px;font-weight:700;color:var(--amb);}
+.as{font-size:10px;color:var(--mut);margin-top:2px;}
+
+/* CAMERA */
+.cambox{background:#000;border-radius:12px;overflow:hidden;margin-bottom:11px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;position:relative;}
+#camV{width:100%;height:100%;object-fit:cover;}
+.camov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:9px;color:#fff;}
+.camop{background:var(--g);color:#fff;border:none;padding:11px 22px;border-radius:11px;font-size:14px;cursor:pointer;font-weight:700;}
+.dcard{background:var(--card);border-radius:12px;padding:12px;margin-bottom:8px;}
+.dn{font-size:16px;font-weight:700;margin-bottom:5px;}
+.dsym{font-size:12px;color:var(--mut);margin-bottom:8px;}
+.dsol{background:#e8f5e9;border-radius:9px;padding:10px;}
+.dst{font-size:12px;font-weight:700;color:var(--g);margin-bottom:3px;}
+.dsb{font-size:12px;color:var(--txt);}
+
+/* WX */
+.wxc{background:var(--card);border-radius:12px;padding:12px;margin-bottom:8px;border-left:4px solid var(--bl);box-shadow:0 2px 5px rgba(0,0,0,.04);}
+
+/* TOTAL */
+.tbar{background:var(--g);color:#fff;border-radius:12px;padding:13px;text-align:center;font-size:17px;font-weight:700;margin-top:9px;}
+
+/* FAB */
+.fab{position:fixed;bottom:20px;right:16px;width:54px;height:54px;border-radius:50%;background:var(--g);border:none;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3);z-index:100;transition:transform .2s;}
+.fab:hover{transform:scale(1.1);}
+.fab.on{background:#c62828;animation:pulse 1s infinite;}
+#vs{position:fixed;bottom:86px;right:12px;background:var(--g);color:#fff;padding:7px 12px;border-radius:18px;font-size:11px;display:none;z-index:99;max-width:200px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+@keyframes glow{0%,100%{box-shadow:0 4px 20px rgba(255,255,255,0.3);}50%{box-shadow:0 4px 40px rgba(255,255,255,0.8);}}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="slogo">🌾</div>
+  <h1>Smart Farmer Assistant</h1>
+  <p>ಭಾಷೆ ಆಯ್ಕೆ ಮಾಡಿ • भाषा चुनें<br>மொழி தேர்வு • భాష ఎంచుకోండి</p>
+
+  <!-- IVR SCREEN — shown immediately, audio starts on first touch anywhere -->
+  <div id="ivrScreen" style="width:100%;max-width:340px;">
+    <div style="background:rgba(255,255,255,0.15);border-radius:16px;padding:16px;text-align:center;margin-bottom:16px;border:1.5px solid rgba(255,255,255,0.3);">
+      <div style="font-size:40px;margin-bottom:8px;animation:fl 2s ease-in-out infinite;">📞</div>
+      <div id="vp" style="color:#fff;font-size:15px;font-weight:600;min-height:22px;">🔊 Tap anywhere to start...</div>
+      <div style="color:#a5d6a7;font-size:11px;margin-top:6px;">Tap screen → App speaks in your language</div>
+    <div id="voiceStatus" style="color:#ffcc80;font-size:10px;margin-top:4px;"></div>
+    <button onclick="checkVoices()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.4);color:#fff;font-size:10px;padding:4px 10px;border-radius:8px;margin-top:6px;cursor:pointer;">🔊 Check Voices</button>
+    </div>
+    <div class="lgrid">
+      <div class="lc" onclick="boot('kn')"><span class="ln">ಕನ್ನಡ</span><span class="ls">1 ಒತ್ತಿರಿ</span></div>
+      <div class="lc" onclick="boot('hi')"><span class="ln">हिन्दी</span><span class="ls">2 दबाएं</span></div>
+      <div class="lc" onclick="boot('ta')"><span class="ln">தமிழ்</span><span class="ls">3 அழுத்தவும்</span></div>
+      <div class="lc" onclick="boot('te')"><span class="ln">తెలుగు</span><span class="ls">4 నొక్కండి</span></div>
+      <div class="lc full" onclick="boot('en')"><span class="ln">English</span><span class="ls">Press 5</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <h1 id="AT">🌾 Smart Farmer</h1>
+    <div class="tbr">
+      <button class="tbtn" onclick="changeLang()">🌐</button>
+      <button class="tbtn" onclick="toggleVoice()">🎤</button>
+    </div>
+  </div>
+
+  <!-- MENU -->
+  <div id="mainMenu">
+    <div class="mwrap">
+      <div class="mgrid">
+        <div class="mb" onclick="showPanel('add')"><span class="ico">🌱</span><div class="lbl" id="M1">Add Crop</div><div class="sub" id="M1s">Tap plant image</div></div>
+        <div class="mb" onclick="showPanel('crops')"><span class="ico">📋</span><div class="lbl" id="M2">My Records</div><div class="sub" id="M2s">View history</div></div>
+        <div class="mb" onclick="showPanel('market')"><span class="ico">💰</span><div class="lbl" id="M3">Market Price</div><div class="sub" id="M3s">MSP 2025-26</div></div>
+        <div class="mb" onclick="showPanel('ai')"><span class="ico">🤖</span><div class="lbl" id="M4">AI Predict</div><div class="sub" id="M4s">Future profit</div></div>
+        <div class="mb" onclick="showPanel('camera')"><span class="ico">📷</span><div class="lbl" id="M5">Plant Doctor</div><div class="sub" id="M5s">Camera + Soil</div></div>
+        <div class="mb" onclick="showPanel('weather')"><span class="ico">🌤️</span><div class="lbl" id="M6">Weather</div><div class="sub" id="M6s">Farming tips</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD CROP PANEL -->
+  <div class="panel" id="panel-add">
+    <button class="back" onclick="goBack()">← <span class="bk">Back</span></button>
+    <div class="phd">🌱 <span id="PT1">Add Crop</span></div>
+    <button class="mic2" onclick="voiceFill()">🎤 <span id="VFT">Speak to fill form</span></button>
+
+    <div class="ctabs">
+      <div class="ctab a" onclick="fcat('all',this)">All</div>
+      <div class="ctab" onclick="fcat('veg',this)" id="CT1">🥦 Vegetables</div>
+      <div class="ctab" onclick="fcat('grain',this)" id="CT2">🌾 Grains</div>
+      <div class="ctab" onclick="fcat('fruit',this)" id="CT3">🍎 Fruits</div>
+      <div class="ctab" onclick="fcat('cash',this)" id="CT4">🌿 Cash</div>
+      <div class="ctab" onclick="fcat('flower',this)" id="CT5">🌸 Flowers</div>
+      <div class="ctab" onclick="fcat('med',this)" id="CT6">💊 Medicinal</div>
+      <div class="ctab" onclick="fcat('spice',this)" id="CT7">🌶️ Spices</div>
+    </div>
+
+    <div class="fg"><label id="LC">Select Plant (tap image)</label>
+      <div class="cgrid" id="cropGrid"></div>
+    </div>
+    <div class="fg"><label id="LSS">Select Season</label>
+      <div class="sgrid" id="seasonGrid"></div>
+    </div>
+
+    <div class="abox">
+      <label id="LAC">Land Area (Acres)</label>
+      <div class="arow">
+        <div class="abtns">
+          <button class="ab" onclick="chAc(-0.5)">−</button>
+          <button class="ab" onclick="chAc(0.5)">+</button>
+        </div>
+        <input type="number" id="inAc" value="1" min="0.5" step="0.5" oninput="calc()">
+        <span style="font-size:12px;color:var(--mut);font-weight:700;">acres</span>
+      </div>
+    </div>
+
+    <!-- AUTO RESULTS -->
+    <div id="autoR" style="display:none;">
+      <div class="section-lbl" id="ART">Auto Calculated</div>
+      <div class="rgrid">
+        <div class="rc"><div class="ri">📅</div><div class="rl" id="RL1">Sowing Date</div><div class="rv" id="RV1">—</div></div>
+        <div class="rc"><div class="ri">🗓️</div><div class="rl" id="RL2">Harvest Date</div><div class="rv" id="RV2">—</div></div>
+        <div class="rc amb"><div class="ri">💰</div><div class="rl" id="RL3">Total Cost</div><div class="rv amb" id="RV3">—</div><div class="rs" id="RS3"></div></div>
+        <div class="rc amb"><div class="ri">⚖️</div><div class="rl" id="RL4">Expected Yield</div><div class="rv amb" id="RV4">—</div></div>
+        <div class="rc bl"><div class="ri">📊</div><div class="rl" id="RL5">MSP / Market</div><div class="rv bl" id="RV5">—</div></div>
+        <div class="rc pur"><div class="ri">💵</div><div class="rl" id="RL6">Expected Profit</div><div class="rv pur" id="RV6">—</div></div>
+      </div>
+
+      <!-- SOIL INFO -->
+      <div class="section-lbl" id="SLT">Soil Intelligence</div>
+      <div class="soil-card" id="soilCard"></div>
+
+      <!-- QUALITY GRADING -->
+      <div class="section-lbl" id="QLT">AI Quality Grading</div>
+      <div class="qual-card" id="qualCard"></div>
+
+      <!-- FERTILIZER -->
+      <div class="section-lbl" id="FT">Fertilizer Schedule</div>
+      <div id="fertList"></div>
+
+      <!-- WATER REQUIREMENTS -->
+      <div class="section-lbl" id="WLT">Water Requirements</div>
+      <div id="waterCard"></div>
+    </div>
+
+    <div style="background:#e8f5e9;border-radius:10px;padding:10px 14px;margin-top:10px;font-size:13px;color:#1b5e20;border-left:3px solid #2e7d32;">
+      💰 <strong>Selling price is automatically taken from current market rates (MSP 2025-26)</strong>
+    </div>
+    <button class="sbtn" id="SB" onclick="saveCrop()">✅ Save Record</button>
+  </div>
+
+  <!-- MY CROPS -->
+  <div class="panel" id="panel-crops">
+    <button class="back" onclick="goBack()">← <span class="bk">Back</span></button>
+    <div class="phd">📋 <span id="PT2">My Records</span></div>
+    <div id="cropList"></div><div id="totalBar"></div>
+  </div>
+
+  <!-- MARKET -->
+  <div class="panel" id="panel-market">
+    <button class="back" onclick="goBack()">← <span class="bk">Back</span></button>
+    <div class="phd">💰 <span id="PT3">Market Prices</span></div>
+    <p id="mktDate" style="font-size:11px;color:var(--mut);margin-bottom:10px;"></p>
+    <div class="section-lbl">MSP = Govt Minimum Support Price 2025-26</div>
+    <div id="priceList"></div>
+  </div>
+
+  <!-- AI -->
+  <div class="panel" id="panel-ai">
+    <button class="back" onclick="goBack()">← <span class="bk">Back</span></button>
+    <div class="phd">🤖 <span id="PT4">AI Predictions</span></div>
+    <div id="aiOut"></div>
+  </div>
+
+  <!-- CAMERA -->
+  <div class="panel" id="panel-camera">
+    <button class="back" onclick="goBack()">← <span class="bk">Back</span></button>
+    <div class="phd">📷 <span id="PT5">Plant Doctor + Soil Detector</span></div>
+    <p style="font-size:12px;color:var(--mut);margin-bottom:10px;" id="camDesc">Take photo of sick plant OR soil — AI detects disease/soil type.</p>
+    <div class="cambox">
+      <video id="camV" autoplay playsinline></video>
+      <div class="camov" id="camOv">
+        <div style="font-size:44px;">📷</div>
+        <button class="camop" id="cob" onclick="startCam()">Open Camera</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+      <button class="sbtn" id="capBtn" onclick="diagPlant()" style="display:none;font-size:13px;padding:10px;">🌿 Diagnose Plant</button>
+      <button class="sbtn" id="soilBtn" onclick="diagSoil()" style="display:none;font-size:13px;padding:10px;background:#e65100;">🪱 Detect Soil</button>
+    </div>
+    <div id="disOut"></div>
+  </div>
+
+  <!-- WEATHER -->
+  <div class="panel" id="panel-weather">
+    <button class="back" onclick="goBack()">← <span class="bk">Back</span></button>
+    <div class="phd">🌤️ <span id="PT6">Weather Tips</span></div>
+    <div id="wxOut"></div>
+  </div>
+
+  <button class="fab" id="fab" onclick="toggleVoice()">🎤</button>
+  <div id="vs"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// PLANT DATABASE — 50 plants with 2025-26 CORRECT COSTS
+// Sources: MSP 2025-26 govt data, agrifarming.in, NABARD reports
+// ════════════════════════════════════════
+const PLANTS=[
+  // ── VEGETABLES (12) ──
+  {id:'tomato',  cat:'veg',  e:'🍅', en:'Tomato',    hi:'टमाटर',      kn:'ಟೊಮೇಟೊ',    ta:'தக்காளி',    te:'టమాటా',
+   sow:[6,7],harv:[9,10],days:90,
+   yldAc:8000,  // kg per acre
+   costAc:38000, // Rs per acre 2025 (seeds 3k+fert 8k+labour 15k+irrigation 8k+misc 4k)
+   mspPQ:null, mktAvg:28, mktMin:12, mktMax:80,
+   soil:{type:'Loamy / Sandy Loam',ph:'6.0–7.0',color:'#8B4513',notes:'Well-drained fertile soil. Rich in organic matter. Avoid waterlogging.',quality:'good'},
+   grades:{A:{tip:'Deep red, firm, >100g fruit. Market Rs.40-80/kg',price:55},B:{tip:'Medium red, slight blemish. Market Rs.20-40/kg',price:28},C:{tip:'Small/pale/cracked. Market Rs.8-15/kg',price:12}},
+   fert:[
+    {wk:'Week 1 (Sowing/Transplant)',items:[{i:'🌱',n:'Vermicompost',q:'2 tonnes/acre',t:'Mix before transplanting',org:true},{i:'💧',n:'DAP (Di-ammonium Phosphate)',q:'25 kg/acre',t:'Basal dose — Rs.1,350/bag 2025'}]},
+    {wk:'Week 4 (Vegetative Growth)',items:[{i:'🌿',n:'Urea',q:'20 kg/acre',t:'Top dress — Rs.266/bag 2025'},{i:'🍃',n:'Neem Cake (Organic)',q:'50 kg/acre',t:'Pest control + soil health',org:true}]},
+    {wk:'Week 8 (Flowering)',items:[{i:'🌸',n:'Potassium Sulphate (SOP)',q:'15 kg/acre',t:'Fruit set + quality — Rs.52/kg 2025'},{i:'🫧',n:'Compost Tea Spray',q:'Weekly spray',t:'Disease immunity booster',org:true}]},
+   ]},
+
+  {id:'onion',cat:'veg',e:'🧅',en:'Onion',hi:'प्याज',kn:'ಈರುಳ್ಳಿ',ta:'வெங்காயம்',te:'ఉల్లిపాయ',
+   sow:[10,11],harv:[2,3],days:120,yldAc:6000,costAc:28000,mspPQ:null,mktAvg:22,mktMin:8,mktMax:60,
+   soil:{type:'Sandy Loam / Clay Loam',ph:'6.0–7.5',color:'#A0522D',notes:'Deep, well-drained soil. Avoid heavy clay. Good drainage essential.',quality:'good'},
+   grades:{A:{tip:'>60mm, firm, uniform. Rs.30-60/kg',price:35},B:{tip:'40-60mm, minor blemish. Rs.15-30/kg',price:20},C:{tip:'<40mm/soft. Rs.5-12/kg',price:8}},
+   fert:[
+    {wk:'Week 1 (Planting)',items:[{i:'🌱',n:'FYM (Farm Yard Manure)',q:'4 tonnes/acre',t:'Base dose — free if own cattle',org:true},{i:'💧',n:'DAP',q:'30 kg/acre',t:'Phosphorus for bulb formation'}]},
+    {wk:'Week 6 (Bulb Formation)',items:[{i:'🌿',n:'Urea',q:'25 kg/acre',t:'Split dose'},{i:'💊',n:'Potash (MOP)',q:'20 kg/acre',t:'Bulb size and quality — Rs.34/kg 2025'}]},
+   ]},
+
+  {id:'potato',cat:'veg',e:'🥔',en:'Potato',hi:'आलू',kn:'ಆಲೂಗಡ್ಡೆ',ta:'உருளைக்கிழங்கு',te:'బంగాళాదుంప',
+   sow:[11,12],harv:[2,3],days:90,yldAc:10000,costAc:45000,mspPQ:null,mktAvg:16,mktMin:6,mktMax:30,
+   soil:{type:'Sandy Loam / Loamy',ph:'5.5–6.5',color:'#8B6914',notes:'Loose, well-drained soil. Light texture for tuber expansion. Avoid clay.',quality:'good'},
+   grades:{A:{tip:'Uniform, >57mm, firm. Rs.20-30/kg',price:22},B:{tip:'45-57mm, clean. Rs.12-18/kg',price:15},C:{tip:'Small/damaged. Rs.5-10/kg',price:7}},
+   fert:[
+    {wk:'Week 1 (Planting)',items:[{i:'🌱',n:'Compost',q:'5 tonnes/acre',t:'Well-decomposed',org:true},{i:'💧',n:'DAP + MOP',q:'40+30 kg/acre',t:'Basal dose for tubers'}]},
+    {wk:'Week 5 (Vegetative)',items:[{i:'🌿',n:'Urea',q:'30 kg/acre',t:'Earth-up application'}]},
+   ]},
+
+  {id:'brinjal',cat:'veg',e:'🍆',en:'Brinjal',hi:'बैंगन',kn:'ಬದನೆಕಾಯಿ',ta:'கத்தரிக்காய்',te:'వంకాయ',
+   sow:[6,7],harv:[9,11],days:100,yldAc:7000,costAc:30000,mspPQ:null,mktAvg:18,mktMin:8,mktMax:40,
+   soil:{type:'Sandy Loam / Red Laterite',ph:'5.5–6.8',color:'#8B3A3A',notes:'Moderately fertile, well-drained. Red laterite works well in Karnataka.',quality:'good'},
+   grades:{A:{tip:'Firm, glossy, uniform colour. Rs.25-40/kg',price:28},B:{tip:'Slightly soft. Rs.12-22/kg',price:16},C:{tip:'Dull/small. Rs.5-10/kg',price:7}},
+   fert:[
+    {wk:'Week 1',items:[{i:'🌱',n:'Vermicompost',q:'2 tonnes/acre',t:'Soil biology booster',org:true}]},
+    {wk:'Week 4',items:[{i:'🌿',n:'Urea',q:'20 kg/acre',t:'Vegetative support'}]},
+   ]},
+
+  {id:'carrot',cat:'veg',e:'🥕',en:'Carrot',hi:'गाजर',kn:'ಗಾಜರ',ta:'கேரட்',te:'క్యారెట్',
+   sow:[10,11],harv:[1,2],days:90,yldAc:8000,costAc:22000,mspPQ:null,mktAvg:25,mktMin:10,mktMax:50,
+   soil:{type:'Sandy Loam / Deep Alluvial',ph:'6.0–6.8',color:'#DEB887',notes:'Deep, loose, stone-free soil. Root depth >30cm needed.',quality:'good'},
+   grades:{A:{tip:'Straight, >20cm, deep orange. Rs.30-50/kg',price:35},B:{tip:'Forked or <20cm. Rs.18-28/kg',price:22},C:{tip:'Cracked/pale. Rs.8-15/kg',price:10}},
+   fert:[
+    {wk:'Week 1',items:[{i:'🌱',n:'Well-rotted FYM',q:'3 tonnes/acre',t:'Sandy loamy soil preferred',org:true}]},
+    {wk:'Week 5',items:[{i:'🌿',n:'Potassium',q:'25 kg/acre',t:'Root development and colour'}]},
+   ]},
+
+  {id:'chilli',cat:'veg',e:'🌶️',en:'Chilli',hi:'मिर्च',kn:'ಮೆಣಸಿನಕಾಯಿ',ta:'மிளகாய்',te:'మిరపకాయ',
+   sow:[6,7],harv:[10,11],days:120,yldAc:2500,costAc:35000,mspPQ:null,mktAvg:65,mktMin:30,mktMax:200,
+   soil:{type:'Black Cotton / Sandy Loam',ph:'6.5–7.5',color:'#2F1B0E',notes:'Deep black soil best for Andhra/Karnataka chilli. Good moisture retention.',quality:'good'},
+   grades:{A:{tip:'Bright red, uniform, >5cm. Rs.100-200/kg dry',price:120},B:{tip:'Light red, slight twist. Rs.60-100/kg',price:75},C:{tip:'Pale/small. Rs.25-55/kg',price:35}},
+   fert:[
+    {wk:'Week 1',items:[{i:'🌱',n:'FYM',q:'4 tonnes/acre',t:'Base manure',org:true},{i:'💧',n:'DAP',q:'30 kg/acre',t:'Phosphorus base dose'}]},
+    {wk:'Week 6',items:[{i:'🌿',n:'Urea',q:'20 kg/acre',t:'Bushy growth'},{i:'🍃',n:'Neem Oil Spray',q:'5ml/L water',t:'Natural pest control',org:true}]},
+   ]},
+
+  {id:'okra',cat:'veg',e:'🫑',en:'Okra/Bhindi',hi:'भिंडी',kn:'ಬೆಂಡೆಕಾಯಿ',ta:'வெண்டைக்காய்',te:'బెండకాయ',
+   sow:[3,4],harv:[6,7],days:60,yldAc:4000,costAc:18000,mspPQ:null,mktAvg:25,mktMin:10,mktMax:45,
+   soil:{type:'Sandy Loam / Alluvial',ph:'6.0–6.8',color:'#C4A35A',notes:'Well-drained fertile alluvial soil. Good organic matter.',quality:'good'},
+   grades:{A:{tip:'Tender, <10cm, dark green. Rs.30-45/kg',price:32},B:{tip:'10-15cm, slightly fibrous. Rs.18-28/kg',price:22},C:{tip:'>15cm/mature. Rs.8-15/kg',price:10}},
+   fert:[{wk:'Week 1',items:[{i:'🌱',n:'Compost',q:'2 tonnes/acre',t:'Fertile well-drained soil',org:true}]},{wk:'Week 4',items:[{i:'🌿',n:'Urea',q:'15 kg/acre',t:'Side dressing'}]}]},
+
+  {id:'spinach',cat:'veg',e:'🥬',en:'Spinach',hi:'पालक',kn:'ಪಾಲಕ',ta:'பசலைக்கீரை',te:'పాలకూర',
+   sow:[10,12],harv:[1,2],days:45,yldAc:4000,costAc:12000,mspPQ:null,mktAvg:22,mktMin:10,mktMax:40,
+   soil:{type:'Loamy / Sandy Loam',ph:'6.5–7.5',color:'#556B2F',notes:'Moist, nitrogen-rich, well-drained soil. Short duration.',quality:'good'},
+   grades:{A:{tip:'Deep green, tender, fresh. Rs.30-40/kg',price:32},B:{tip:'Light green, some yellowing. Rs.15-25/kg',price:18},C:{tip:'Yellow/wilted. Rs.5-12/kg',price:7}},
+   fert:[{wk:'Week 1',items:[{i:'🌱',n:'Compost',q:'2 tonnes/acre',t:'High nitrogen for leafy growth',org:true}]}]},
+
+  {id:'cabbage',cat:'veg',e:'🥦',en:'Cabbage',hi:'पत्ता गोभी',kn:'ಎಲೆಕೋಸು',ta:'முட்டைக்கோஸ்',te:'క్యాబేజీ',
+   sow:[10,11],harv:[1,2],days:80,yldAc:12000,costAc:25000,mspPQ:null,mktAvg:12,mktMin:5,mktMax:25,
+   soil:{type:'Clay Loam / Loamy',ph:'6.0–6.5',color:'#8B7355',notes:'Heavy feeder. Deep, fertile, moisture-retaining soil.',quality:'good'},
+   grades:{A:{tip:'Tight head, >1kg, firm. Rs.15-25/kg',price:18},B:{tip:'Loose head, 0.5-1kg. Rs.8-14/kg',price:11},C:{tip:'Small/<0.5kg. Rs.3-7/kg',price:5}},
+   fert:[{wk:'Week 1',items:[{i:'🌱',n:'FYM',q:'5 tonnes/acre',t:'Heavy feeder crop',org:true}]},{wk:'Week 4',items:[{i:'🌿',n:'Urea',q:'30 kg/acre',t:'Head formation support'}]}]},
+
+  {id:'cucumber',cat:'veg',e:'🥒',en:'Cucumber',hi:'खीरा',kn:'ಸೌತೆಕಾಯಿ',ta:'வெள்ளரிக்காய்',te:'దోసకాయ',
+   sow:[2,3],harv:[4,5],days:50,yldAc:6000,costAc:20000,mspPQ:null,mktAvg:18,mktMin:8,mktMax:35,
+   soil:{type:'Sandy Loam / Alluvial',ph:'6.0–7.0',color:'#C4A35A',notes:'Warm, fertile, well-drained. Good water-holding capacity.',quality:'good'},
+   grades:{A:{tip:'15-20cm, firm, dark green. Rs.22-35/kg',price:25},B:{tip:'Slightly yellow/bent. Rs.12-20/kg',price:16},C:{tip:'Over-mature/pale. Rs.5-10/kg',price:7}},
+   fert:[{wk:'Week 1',items:[{i:'🌱',n:'Compost',q:'3 tonnes/acre',t:'Warm fertile soil',org:true}]}]},
+
+  {id:'pumpkin',cat:'veg',e:'🎃',en:'Pumpkin',hi:'कद्दू',kn:'ಕುಂಬಳಕಾಯಿ',ta:'பரங்கிக்காய்',te:'గుమ్మడికాయ',
+   sow:[6,7],harv:[9,10],days:90,yldAc:8000,costAc:14000,mspPQ:null,mktAvg:10,mktMin:5,mktMax:20,
+   soil:{type:'Loamy / Sandy Loam',ph:'6.0–7.0',color:'#C4A35A',notes:'Rich organic soil, good drainage. Easy to grow.',quality:'good'},
+   grades:{A:{tip:'>2kg, firm, orange. Rs.12-20/kg',price:14},B:{tip:'1-2kg. Rs.7-12/kg',price:9},C:{tip:'<1kg/pale. Rs.3-6/kg',price:4}},
+   fert:[{wk:'Week 1',items:[{i:'🌱',n:'FYM',q:'4 tonnes/acre',t:'Rich organic soil',org:true}]}]},
+
+  {id:'garlic',cat:'veg',e:'🧄',en:'Garlic',hi:'लहसुन',kn:'ಬೆಳ್ಳುಳ್ಳಿ',ta:'பூண்டு',te:'వెల్లుల్లి',
+   sow:[10,11],harv:[2,3],days:120,yldAc:1500,costAc:32000,mspPQ:null,mktAvg:80,mktMin:40,mktMax:200,
+   soil:{type:'Sandy Loam / Well-drained Loam',ph:'6.0–7.0',color:'#DEB887',notes:'Light, well-drained. Avoid waterlogged soil. Bulb splitting in heavy clay.',quality:'good'},
+   grades:{A:{tip:'>6cm bulb, firm, white. Rs.100-200/kg',price:120},B:{tip:'4-6cm. Rs.60-100/kg',price:75},C:{tip:'<4cm/loose. Rs.30-55/kg',price:35}},
+   fert:[{wk:'Week 1',items:[{i:'🌱',n:'Vermicompost',q:'2 tonnes/acre',t:'Well-drained sandy loam',org:true}]},{wk:'Week 6',items:[{i:'🌿',n:'Potash',q:'25 kg/acre',t:'Bulb development'}]}]},
+
+  // ── GRAINS (8) with 2025-26 MSP prices ──
+  {id:'rice',cat:'grain',e:'🌾',en:'Rice/Paddy',hi:'धान',kn:'ಭತ್ತ',ta:'நெல்',te:'వరి',
+   sow:[6,7],harv:[10,11],days:140,yldAc:2000,costAc:28000,mspPQ:2369,mktAvg:24,mktMin:20,mktMax:32,
+   soil:{type:'Clay / Heavy Clay Loam',ph:'5.5–6.5',color:'#3D2B1F',notes:'Water-retaining heavy clay soil. Impervious subsoil prevents water seepage.',quality:'good'},
+   grades:{A:{tip:'Grade A paddy. MSP Rs.2369/quintal 2025-26',price:24},B:{tip:'Common paddy. MSP Rs.2369/quintal',price:22},C:{tip:'Below grade. Market Rs.18-20/kg',price:18}},
+   fert:[
+    {wk:'Week 1 (Transplant)',items:[{i:'🌱',n:'FYM / Green Manure',q:'5 tonnes/acre',t:'Before puddling',org:true},{i:'💧',n:'DAP',q:'30 kg/acre',t:'Basal dose — Rs.1,350/bag 2025'}]},
+    {wk:'Week 4 (Tillering)',items:[{i:'🌿',n:'Neem-coated Urea',q:'30 kg/acre',t:'Slow release — Rs.266/bag 2025',org:true}]},
+    {wk:'Week 8 (Panicle)',items:[{i:'🌸',n:'Potash MOP',q:'20 kg/acre',t:'Grain filling quality'}]},
+   ]},
+
+  {id:'wheat',cat:'grain',e:'🌿',en:'Wheat',hi:'गेहूं',kn:'ಗೋಧಿ',ta:'கோதுமை',te:'గోధుమ',
+   sow:[11,12],harv:[3,4],days:130,yldAc:1800,costAc:22000,mspPQ:2585,mktAvg:26,mktMin:23,mktMax:32,
+   soil:{type:'Loamy / Clay Loam',ph:'6.0–7.5',color:'#8B6914',notes:'Deep fertile loam. Punjab/Haryana black cotton soil ideal.',quality:'good'},
+   grades:{A:{tip:'Hard wheat, >12% protein. MSP Rs.2585/qtl 2026-27',price:26},B:{tip:'Soft wheat. Rs.2200-2400/qtl',price:24},C:{tip:'Low protein. Rs.1800-2100/qtl',price:20}},
+   fert:[
+    {wk:'Week 1 (Sowing)',items:[{i:'🌱',n:'FYM',q:'4 tonnes/acre',t:'Pre-sowing',org:true},{i:'💧',n:'DAP',q:'40 kg/acre',t:'Basal phosphorus'}]},
+    {wk:'Week 3 (Crown Root)',items:[{i:'🌿',n:'Urea',q:'30 kg/acre',t:'First irrigation dose'}]},
+    {wk:'Week 7 (Jointing)',items:[{i:'🌸',n:'Urea',q:'25 kg/acre',t:'Second dose'}]},
+   ]},
+
+  {id:'maize',cat:'grain',e:'🌽',en:'Maize',hi:'मक्का',kn:'ಮೆಕ್ಕೆಜೋಳ',ta:'மக்காச்சோளம்',te:'మొక్కజొన్న',
+   sow:[6,7],harv:[9,10],days:90,yldAc:2500,costAc:18000,mspPQ:2225,mktAvg:22,mktMin:18,mktMax:28,
+   soil:{type:'Loamy / Sandy Loam',ph:'6.0–7.5',color:'#C4A35A',notes:'Well-drained fertile loam. Avoid waterlogging at sowing.',quality:'good'},
+   grades:{A:{tip:'MSP Rs.2225/qtl 2025-26',price:22},B:{tip:'Rs.1800-2100/qtl',price:20},C:{tip:'Below grade Rs.1400-1700/qtl',price:16}},
+   fert:[
+    {wk:'Week 1',items:[{i:'🌱',n:'Compost',q:'3 tonnes/acre',t:'Base organic',org:true},{i:'💧',n:'DAP',q:'35 kg/acre',t:'Phosphorus+nitrogen base'}]},
+    {wk:'Week 4',items:[{i:'🌿',n:'Urea',q:'40 kg/acre',t:'Heavy nitrogen feeder — critical'}]},
+   ]},
+
+  {id:'millet',cat:'grain',e:'🌱',en:'Bajra/Millet',hi:'बाजरा',kn:'ಸಜ್ಜೆ',ta:'கம்பு',te:'బజ్రా',
+   sow:[6,7],harv:[9,10],days:90,yldAc:1200,costAc:10000,mspPQ:2625,mktAvg:26,mktMin:22,mktMax:32,
+   soil:{type:'Sandy / Sandy Loam',ph:'6.5–8.0',color:'#F5DEB3',notes:'Tolerates poor, dry, sandy soil. Most drought-resistant grain.',quality:'medium'},
+   grades:{A:{tip:'MSP Rs.2625/qtl (highest margin 63%)',price:26},B:{tip:'Rs.2200-2400/qtl',price:24},C:{tip:'Rs.1800-2100/qtl',price:20}},
+   fert:[{wk:'Week 1',items:[{i:'🌱',n:'FYM',q:'3 tonnes/acre',t:'Drought-tolerant, low input',org:true}]},{wk:'Week 4',items:[{i:'🌿',n:'Urea',q:'20 kg/acre',t:'Light nitrogen feeder'}]}]},
+
+  {id:'jowar',cat:'grain',e:'🎍',en:'Jowar/Sorghum',hi:'ज्वार',kn:'ಜೋಳ',ta:'சோளம்',te:'జొన్న',
+   sow:[6,7],harv:[9,10],days:100,yldAc:1500,costAc:11000,mspPQ:3371,mktAvg:34,mktMin:28,mktMax:42,
+   soil:{type:'Black Cotton / Loamy',ph:'6.5–7.5',color:'#2F1B0E',notes:'Deep black cotton soil. Tolerates semi-arid conditions.',quality:'medium'},
+   grades:{A:{tip:'MSP Rs.3371/qtl Maldandi grade 2025-26',price:34},B:{tip:'Common grade Rs.2800-3200/qtl',price:30},C:{tip:'Rs.2200-2700/qtl',price:24}},
+   fert:[{wk:'Week 1',items:[{i:'🌱',n:'Compost',q:'2 tonnes/acre',t:'Tolerates poor soil',org:true}]}]},
+
+  {id:'groundnut',cat:'grain',e:'🥜',en:'Groundnut',hi:'मूंगफली',kn:'ಶೇಂಗಾ',ta:'நிலக்கடலை',te:'వేరుశనగ',
+   sow:[6,7],harv:[9,10],days:110,yldAc:1000,costAc:22000,mspPQ:6783,mktAvg:68,mktMin:55,mktMax:90,
+   soil:{type:'Sandy Loam / Red Loam',ph:'6.0–6.5',color:'#CD853F',notes:'Light, loose, well-drained sandy loam. Calcium-rich soil for pod filling.',quality:'good'},
+   grades:{A:{tip:'Bold pods, >50% shelling. MSP Rs.6783/qtl',price:68},B:{tip:'Medium. Rs.5500-6500/qtl',price:60},C:{tip:'Small/immature. Rs.4000-5200/qtl',price:48}},
+   fert:[{wk:'Week 1',items:[{i:'🌱',n:'Gypsum + FYM',q:'200kg+4T/acre',t:'Gypsum for pod filling',org:true}]},{wk:'Week 4',items:[{i:'🌿',n:'Rhizobium inoculant',q:'1 packet/acre',t:'Natural nitrogen fixer',org:true}]}]},
+
+  {id:'soybean',cat:'grain',e:'🫘',en:'Soybean',hi:'सोयाबीन',kn:'ಸೋಯಾಬೀನ್',ta:'சோயாபீன்',te:'సోయాబీన్',
+   sow:[6,7],harv:[9,10],days:100,yldAc:1200,costAc:16000,mspPQ:4892,mktAvg:49,mktMin:42,mktMax:60,
+   soil:{type:'Clay Loam / Loamy',ph:'6.0–7.0',color:'#8B6914',notes:'Well-drained deep loam. Slightly acidic to neutral pH preferred.',quality:'good'},
+   grades:{A:{tip:'MSP Rs.4892/qtl 2025-26. 18%+ protein',price:49},B:{tip:'Rs.4200-4700/qtl',price:44},C:{tip:'Rs.3500-4100/qtl',price:38}},
+   fert:[{wk:'Week 1',items:[{i:'🌱',n:'Rhizobium + PSB Culture',q:'1 packet each/acre',t:'Bio-fertilizer — nitrogen fixation',org:true}]}]},
+
+  {id:'bengalgram',cat:'grain',e:'🫘',en:'Bengal Gram/Chana',hi:'चना',kn:'ಕಡಲೆ',ta:'கடலை',te:'శనగ',
+   sow:[10,11],harv:[1,2],days:100,yldAc:800,costAc:14000,mspPQ:5650,mktAvg:57,mktMin:50,mktMax:70,
+   soil:{type:'Loamy / Sandy Loam',ph:'6.0–7.5',color:'#C4A35A',notes:'Well-drained light loamy soil. Avoid heavy clay and saline.',quality:'good'},
+   grades:{A:{tip:'Bold, uniform. MSP Rs.5650/qtl 2025-26',price:57},B:{tip:'Medium. Rs.4800-5400/qtl',price:52},C:{tip:'Small/broken. Rs.3800-4600/qtl',price:42}},
+   fert:[{wk:'Week 1',items:[{i:'🌱',n:'Rhizobium culture + FYM',q:'1 packet + 2T/acre',t:'Fixes nitrogen naturally',org:true}]},{wk:'Week 4',items:[{i:'💧',n:'Potash',q:'15 kg/acre',t:'Pod formation'}]}]},
+
+  // ── FRUITS (8) ──
+  {id:'mango',cat:'fruit',e:'🥭',en:'Mango',hi:'आम',kn:'ಮಾವು',ta:'மாம்பழம்',te:'మామిడి',
+   sow:[7,8],harv:[4,5],days:270,yldAc:5000,costAc:45000,mspPQ:null,mktAvg:55,mktMin:25,mktMax:120,
+   soil:{type:'Deep Alluvial / Laterite',ph:'5.5–7.5',color:'#8B4513',notes:'Deep, well-drained alluvial or laterite soil up to 6m depth. Alphonso prefers laterite.',quality:'good'},
+   grades:{A:{tip:'Alphonso/Kesar grade. Rs.80-120/kg',price:90},B:{tip:'Dusehri/Langra. Rs.40-70/kg',price:52},C:{tip:'Small/fibrous. Rs.20-35/kg',price:25}},
+   fert:[{wk:'June–July (Pre-flower)',items:[{i:'🌱',n:'FYM/Compost',q:'50 kg per tree',t:'Ring application',org:true},{i:'💧',n:'NPK 13:0:45',q:'500g per tree',t:'Potassium for fruiting'}]},{wk:'Feb (Fruit dev)',items:[{i:'🌸',n:'Potash',q:'300g per tree',t:'Size and sweetness'}]}]},
+
+  {id:'banana',cat:'fruit',e:'🍌',en:'Banana',hi:'केला',kn:'ಬಾಳೆ',ta:'வாழை',te:'అరటి',
+   sow:[1,2],harv:[9,10],days:270,yldAc:20000,costAc:55000,mspPQ:null,mktAvg:22,mktMin:12,mktMax:40,
+   soil:{type:'Loamy / Sandy Loam / Clay Loam',ph:'6.0–7.5',color:'#8B6914',notes:'Deep, fertile, well-drained loam. High organic matter. Regular irrigation essential.',quality:'good'},
+   grades:{A:{tip:'G9 variety, uniform, >150g. Rs.28-40/kg',price:32},B:{tip:'Medium bunch. Rs.18-26/kg',price:22},C:{tip:'Small/damaged. Rs.10-16/kg',price:12}},
+   fert:[{wk:'Month 1',items:[{i:'🌱',n:'FYM',q:'10 kg per pit',t:'Large compost pit',org:true},{i:'💧',n:'DAP',q:'100g per plant',t:'Phosphorus rooting'}]},{wk:'Month 3',items:[{i:'🌿',n:'Urea',q:'150g per plant',t:'High nitrogen feeder'}]},{wk:'Month 6',items:[{i:'🌸',n:'Potash',q:'200g per plant',t:'Bunch development'}]}]},
+
+  {id:'papaya',cat:'fruit',e:'🍑',en:'Papaya',hi:'पपीता',kn:'ಪಪ್ಪಾಯಿ',ta:'பப்பாளி',te:'బొప్పాయి',
+   sow:[6,7],harv:[12,1],days:180,yldAc:20000,costAc:30000,mspPQ:null,mktAvg:16,mktMin:8,mktMax:30,
+   soil:{type:'Sandy Loam / Alluvial',ph:'6.0–6.5',color:'#DEB887',notes:'Light, well-drained. Cannot tolerate waterlogging even for 48 hours.',quality:'good'},
+   grades:{A:{tip:'>1.5kg, firm, uniform orange. Rs.20-30/kg',price:22},B:{tip:'1-1.5kg. Rs.12-18/kg',price:15},C:{tip:'<1kg/blemished. Rs.6-10/kg',price:8}},
+   fert:[{wk:'Month 1',items:[{i:'🌱',n:'FYM',q:'5 kg per pit',t:'Well-drained essential',org:true}]},{wk:'Month 3',items:[{i:'🌿',n:'Urea + Potash',q:'100g+100g per plant',t:'Monthly feeding'}]}]},
+
+  {id:'guava',cat:'fruit',e:'🍈',en:'Guava',hi:'अमरूद',kn:'ಸೀಬೆ',ta:'கொய்யா',te:'జామ',
+   sow:[7,8],harv:[11,12],days:150,yldAc:8000,costAc:25000,mspPQ:null,mktAvg:38,mktMin:20,mktMax:70,
+   soil:{type:'Sandy Loam / Loamy / Alluvial',ph:'4.5–8.2',color:'#C4A35A',notes:'Very adaptable. Grows in poor soils too. Good drainage preferred.',quality:'medium'},
+   grades:{A:{tip:'Allahabad Safeda, >200g, firm. Rs.50-70/kg',price:55},B:{tip:'Medium, slight blemish. Rs.28-45/kg',price:35},C:{tip:'Small/soft. Rs.15-25/kg',price:18}},
+   fert:[{wk:'June',items:[{i:'🌱',n:'FYM',q:'25 kg per tree',t:'Apply before rains',org:true},{i:'💧',n:'NPK mix',q:'300g per tree',t:'Balanced nutrition'}]}]},
+
+  {id:'grapes',cat:'fruit',e:'🍇',en:'Grapes',hi:'अंगूर',kn:'ದ್ರಾಕ್ಷಿ',ta:'திராட்சை',te:'ద్రాక్ష',
+   sow:[1,2],harv:[4,5],days:120,yldAc:6000,costAc:75000,mspPQ:null,mktAvg:85,mktMin:50,mktMax:160,
+   soil:{type:'Well-drained Sandy Loam / Gravelly',ph:'6.5–7.0',color:'#CD853F',notes:'Well-drained, slightly alkaline. Nashik/Sangli black soil with good drainage.',quality:'good'},
+   grades:{A:{tip:'Thompson Seedless export. Rs.100-160/kg',price:120},B:{tip:'Table grade. Rs.65-95/kg',price:80},C:{tip:'Juice grade. Rs.35-60/kg',price:45}},
+   fert:[{wk:'January (Pruning)',items:[{i:'🌱',n:'FYM',q:'30 kg per vine',t:'Post-cane pruning',org:true},{i:'💧',n:'DAP',q:'200g per vine',t:'Root zone'}]},{wk:'Berry stage',items:[{i:'🌸',n:'Potassium Nitrate',q:'150g per vine',t:'Berry quality and colour'}]}]},
+
+  {id:'lemon',cat:'fruit',e:'🍋',en:'Lemon',hi:'नींबू',kn:'ನಿಂಬೆ',ta:'எலுமிச்சை',te:'నిమ్మ',
+   sow:[7,8],harv:[1,2],days:180,yldAc:4000,costAc:22000,mspPQ:null,mktAvg:42,mktMin:20,mktMax:80,
+   soil:{type:'Sandy Loam / Loamy',ph:'5.5–7.0',color:'#DEB887',notes:'Well-drained light loam. Avoid waterlogging and heavy clay.',quality:'good'},
+   grades:{A:{tip:'>60mm, juicy, bright yellow. Rs.60-80/kg',price:65},B:{tip:'45-60mm. Rs.35-55/kg',price:42},C:{tip:'<45mm/dull. Rs.15-30/kg',price:20}},
+   fert:[{wk:'June',items:[{i:'🌱',n:'FYM + Compost',q:'25 kg per tree',t:'Before monsoon',org:true}]},{wk:'September',items:[{i:'🌿',n:'Potash',q:'200g per tree',t:'Fruit quality'}]}]},
+
+  {id:'coconut',cat:'fruit',e:'🥥',en:'Coconut',hi:'नारियल',kn:'ತೆಂಗಿನಕಾಯಿ',ta:'தேங்காய்',te:'కొబ్బరి',
+   sow:[5,6],harv:[0,0],days:365,yldAc:3000,costAc:30000,mspPQ:12100,mktAvg:22,mktMin:15,mktMax:35,
+   soil:{type:'Laterite / Sandy Loam / Alluvial',ph:'5.2–8.0',color:'#8B4513',notes:'Adaptable. Laterite in Kerala, alluvial in Tamil Nadu. Good drainage essential.',quality:'medium'},
+   grades:{A:{tip:'250+ nuts/palm/year. MSP copra Rs.12100/qtl 2025',price:22},B:{tip:'150-250 nuts. Rs.18-28/kg',price:20},C:{tip:'<150 nuts. Rs.12-16/kg',price:14}},
+   fert:[{wk:'January & July',items:[{i:'🌱',n:'FYM',q:'50 kg per palm',t:'Twice a year',org:true},{i:'💧',n:'NPK 13:0:45 + Borax',q:'1.3kg+50g per palm',t:'Borax prevents button shedding'}]}]},
+
+  // ── CASH CROPS (6) ──
+  {id:'cotton',cat:'cash',e:'🌸',en:'Cotton',hi:'कपास',kn:'ಹತ್ತಿ',ta:'பருத்தி',te:'పత్తి',
+   sow:[5,6],harv:[10,11],days:160,yldAc:600,costAc:40000,mspPQ:7121,mktAvg:72,mktMin:60,mktMax:90,
+   soil:{type:'Black Cotton (Vertisol)',ph:'6.5–8.0',color:'#1C1C1C',notes:'Deep black cotton soil with high water retention. Maharashtra/Gujarat ideal.',quality:'good'},
+   grades:{A:{tip:'Long staple. MSP Rs.7121/qtl 2025-26 (+Rs.589)',price:72},B:{tip:'Medium staple. Rs.5800-6900/qtl',price:65},C:{tip:'Short staple. Rs.4500-5700/qtl',price:52}},
+   fert:[
+    {wk:'Week 1 (Sowing)',items:[{i:'🌱',n:'FYM',q:'5 tonnes/acre',t:'Black soil preparation',org:true},{i:'💧',n:'DAP',q:'40 kg/acre',t:'Basal phosphorus'}]},
+    {wk:'Week 6 (Square)',items:[{i:'🌿',n:'Urea',q:'30 kg/acre',t:'Critical growth stage'},{i:'🍃',n:'Neem Oil',q:'5ml/L water',t:'Bollworm control — natural',org:true}]},
+    {wk:'Week 10 (Boll)',items:[{i:'🌸',n:'Potash',q:'25 kg/acre',t:'Fibre quality'}]},
+   ]},
+
+  {id:'sugar',cat:'cash',e:'🎋',en:'Sugarcane',hi:'गन्ना',kn:'ಕಬ್ಬು',ta:'கரும்பு',te:'చెరకు',
+   sow:[2,3],harv:[11,12],days:300,yldAc:30000,costAc:65000,mspPQ:340,mktAvg:3.5,mktMin:3,mktMax:4.5,
+   soil:{type:'Deep Loamy / Clay Loam',ph:'6.5–7.5',color:'#3D2B1F',notes:'Deep (>1m), fertile, moisture-retaining loam. FRP Rs.340/qtl 2025-26.',quality:'good'},
+   grades:{A:{tip:'FRP Rs.340/quintal 2025-26 (UP SAP Rs.400)',price:3.8},B:{tip:'Standard cane. Rs.3.2-3.6/kg',price:3.4},C:{tip:'Below standard. Rs.2.8-3.1/kg',price:3}},
+   fert:[
+    {wk:'Month 1 (Planting)',items:[{i:'🌱',n:'FYM / Press mud',q:'10 tonnes/acre',t:'Press mud ideal',org:true},{i:'💧',n:'DAP',q:'50 kg/acre',t:'High phosphorus'}]},
+    {wk:'Month 3',items:[{i:'🌿',n:'Urea',q:'60 kg/acre',t:'Heavy nitrogen feeder'}]},
+    {wk:'Month 6',items:[{i:'🌸',n:'Urea + Potash',q:'40+30 kg/acre',t:'Grand growth period'}]},
+   ]},
+
+  {id:'turmeric',cat:'cash',e:'🟡',en:'Turmeric',hi:'हल्दी',kn:'ಅರಿಶಿನ',ta:'மஞ்சள்',te:'పసుపు',
+   sow:[4,5],harv:[12,1],days:240,yldAc:2500,costAc:45000,mspPQ:null,mktAvg:85,mktMin:60,mktMax:150,
+   soil:{type:'Red Loam / Sandy Clay Loam',ph:'5.5–7.0',color:'#CD853F',notes:'Well-drained red loam or sandy clay. Andhra/Telangana red soil best.',quality:'good'},
+   grades:{A:{tip:'Erode/Sangli grade, >3% curcumin. Rs.100-150/kg',price:120},B:{tip:'Finger turmeric. Rs.70-95/kg',price:82},C:{tip:'Small/dry. Rs.45-65/kg',price:52}},
+   fert:[{wk:'Week 1 (Planting)',items:[{i:'🌱',n:'FYM + Vermicompost',q:'8+2 tonnes/acre',t:'Heavy organic feeder',org:true},{i:'💧',n:'DAP',q:'25 kg/acre',t:'Basal dose'}]},{wk:'Month 3',items:[{i:'🌿',n:'Neem cake',q:'100 kg/acre',t:'Rhizome borer control',org:true}]}]},
+
+  {id:'ginger',cat:'cash',e:'🫚',en:'Ginger',hi:'अदरक',kn:'ಶುಂಠಿ',ta:'இஞ்சி',te:'అల్లం',
+   sow:[4,5],harv:[11,12],days:210,yldAc:3000,costAc:52000,mspPQ:null,mktAvg:72,mktMin:40,mktMax:160,
+   soil:{type:'Red Loam / Sandy Loam',ph:'5.5–6.5',color:'#CD853F',notes:'Well-drained red loam raised beds. Shade tolerant in early stages.',quality:'good'},
+   grades:{A:{tip:'Dry ginger, export quality. Rs.100-160/kg',price:120},B:{tip:'Fresh ginger large. Rs.60-90/kg',price:72},C:{tip:'Small rhizomes. Rs.30-55/kg',price:40}},
+   fert:[{wk:'Week 1',items:[{i:'🌱',n:'FYM',q:'8 tonnes/acre',t:'Well-drained raised beds',org:true},{i:'🍃',n:'Trichoderma',q:'2.5 kg/acre',t:'Natural soil protector',org:true}]}]},
+
+  {id:'sunflower',cat:'cash',e:'🌻',en:'Sunflower',hi:'सूरजमुखी',kn:'ಸೂರ್ಯಕಾಂತಿ',ta:'சூரியகாந்தி',te:'పొద్దుతిరుగుడు',
+   sow:[6,7],harv:[9,10],days:90,yldAc:700,costAc:14000,mspPQ:7280,mktAvg:73,mktMin:60,mktMax:90,
+   soil:{type:'Sandy Loam / Loamy',ph:'6.0–7.5',color:'#C4A35A',notes:'Well-drained medium soil. Tolerates slightly acidic to neutral.',quality:'good'},
+   grades:{A:{tip:'MSP Rs.7280/qtl 2025-26 (+Rs.150)',price:73},B:{tip:'Rs.6000-7000/qtl',price:65},C:{tip:'Rs.4500-5800/qtl',price:52}},
+   fert:[{wk:'Week 1',items:[{i:'🌱',n:'FYM',q:'3 tonnes/acre',t:'Well-drained essential',org:true},{i:'💧',n:'DAP',q:'25 kg/acre',t:'Basal dose'}]},{wk:'Week 4',items:[{i:'🌿',n:'Urea',q:'25 kg/acre',t:'Knee height top dress'}]}]},
+
+  // ── FLOWERS (6) ──
+  {id:'rose',cat:'flower',e:'🌹',en:'Rose',hi:'गुलाब',kn:'ಗುಲಾಬಿ',ta:'ரோஸ்',te:'గులాబీ',
+   sow:[10,11],harv:[1,2],days:90,yldAc:200000,costAc:80000,mspPQ:null,mktAvg:0.5,mktMin:0.3,mktMax:1.5,
+   soil:{type:'Sandy Loam / Well-drained Loam',ph:'6.0–6.5',color:'#DEB887',notes:'Well-drained, slightly acidic sandy loam. High organic matter. Avoid clay.',quality:'good'},
+   grades:{A:{tip:'Export quality, full bloom. Rs.0.8-1.5/flower',price:1},B:{tip:'Local mandi. Rs.0.4-0.7/flower',price:0.5},C:{tip:'Loose petals. Rs.0.1-0.3/flower',price:0.2}},
+   fert:[{wk:'Week 1',items:[{i:'🌱',n:'Vermicompost',q:'3 tonnes/acre',t:'High organic for rose quality',org:true}]},{wk:'Monthly',items:[{i:'🌸',n:'NPK 20:20:20',q:'5g per plant',t:'Balanced nutrition for blooms'}]}]},
+
+  {id:'marigold',cat:'flower',e:'🌼',en:'Marigold',hi:'गेंदा',kn:'ಚೆಂಡು ಹೂ',ta:'தாமரை',te:'బంతి పూలు',
+   sow:[7,8],harv:[10,11],days:75,yldAc:3000,costAc:22000,mspPQ:null,mktAvg:22,mktMin:10,mktMax:50,
+   soil:{type:'Sandy Loam / Loamy',ph:'6.0–7.0',color:'#C4A35A',notes:'Adaptable, grows in most soils. Well-drained preferred. Easy to grow.',quality:'medium'},
+   grades:{A:{tip:'African Marigold, large head. Rs.30-50/kg',price:35},B:{tip:'French marigold. Rs.18-28/kg',price:22},C:{tip:'Small/damaged. Rs.8-14/kg',price:10}},
+   fert:[{wk:'Week 1',items:[{i:'🌱',n:'FYM',q:'3 tonnes/acre',t:'Easy growing crop',org:true}]},{wk:'Week 3',items:[{i:'🌿',n:'Urea',q:'15 kg/acre',t:'Light feeder'}]}]},
+
+  {id:'jasmine',cat:'flower',e:'🌸',en:'Jasmine',hi:'चमेली',kn:'ಮಲ್ಲಿಗೆ',ta:'மல்லிகை',te:'మల్లె',
+   sow:[2,3],harv:[5,6],days:120,yldAc:1500,costAc:35000,mspPQ:null,mktAvg:180,mktMin:80,mktMax:400,
+   soil:{type:'Sandy Loam / Red Loam',ph:'6.0–7.5',color:'#CD853F',notes:'Well-drained sandy loam. Tamil Nadu red soil gives best fragrance.',quality:'good'},
+   grades:{A:{tip:'Night jasmine, strong fragrance. Rs.200-400/kg',price:250},B:{tip:'Madurai malli. Rs.120-180/kg',price:150},C:{tip:'Small buds. Rs.60-100/kg',price:80}},
+   fert:[{wk:'Month 1',items:[{i:'🌱',n:'Compost',q:'2 tonnes/acre',t:'Fragrance improves with organic',org:true}]},{wk:'Every 3 months',items:[{i:'🌸',n:'FYM + Potash',q:'5kg+100g per plant',t:'Flowering booster'}]}]},
+
+  {id:'chrysanth',cat:'flower',e:'🌺',en:'Chrysanthemum',hi:'गुलदाउदी',kn:'ಕ್ರಿಸ್ಯಾಂಥಿಮಮ್',ta:'சாமந்தி',te:'చామంతి',
+   sow:[8,9],harv:[11,12],days:90,yldAc:2000,costAc:28000,mspPQ:null,mktAvg:30,mktMin:15,mktMax:60,
+   soil:{type:'Sandy Loam / Well-drained Loam',ph:'6.0–7.0',color:'#DEB887',notes:'Well-drained, fertile, sandy loam. Regular irrigation needed.',quality:'good'},
+   grades:{A:{tip:'Large head >7cm. Rs.40-60/kg',price:45},B:{tip:'Medium head. Rs.22-38/kg',price:28},C:{tip:'Small/damaged. Rs.10-18/kg',price:13}},
+   fert:[{wk:'Week 1',items:[{i:'🌱',n:'Vermicompost',q:'2 tonnes/acre',t:'Excellent for cut flowers',org:true}]}]},
+
+  // ── MEDICINAL (6) ──
+  {id:'aloevera',cat:'med',e:'🌵',en:'Aloe Vera',hi:'एलोवेरा',kn:'ಅಲೋ ವೆರಾ',ta:'கற்றாழை',te:'అలోవెరా',
+   sow:[2,3],harv:[8,9],days:180,yldAc:20000,costAc:20000,mspPQ:null,mktAvg:5,mktMin:3,mktMax:15,
+   soil:{type:'Sandy / Sandy Loam',ph:'7.0–8.5',color:'#F5DEB3',notes:'Dry, sandy, alkaline. Very drought tolerant. Avoid waterlogging.',quality:'medium'},
+   grades:{A:{tip:'Gel >98%, thick leaves. Rs.10-15/kg',price:12},B:{tip:'Medium quality. Rs.5-8/kg',price:6},C:{tip:'Thin leaves. Rs.2-4/kg',price:3}},
+   fert:[{wk:'Year 1',items:[{i:'🌱',n:'FYM',q:'2 tonnes/acre',t:'Minimal input, drought hardy',org:true}]}]},
+
+  {id:'tulsi',cat:'med',e:'🍀',en:'Tulsi/Holy Basil',hi:'तुलसी',kn:'ತುಳಸಿ',ta:'துளசி',te:'తులసి',
+   sow:[3,4],harv:[6,7],days:90,yldAc:2000,costAc:15000,mspPQ:null,mktAvg:40,mktMin:20,mktMax:80,
+   soil:{type:'Sandy Loam / Loamy',ph:'6.0–7.5',color:'#C4A35A',notes:'Well-drained fertile soil. Drought tolerant once established.',quality:'medium'},
+   grades:{A:{tip:'High eugenol content, export. Rs.60-80/kg',price:65},B:{tip:'Standard grade. Rs.32-55/kg',price:40},C:{tip:'Low oil content. Rs.15-28/kg',price:18}},
+   fert:[{wk:'Week 1',items:[{i:'🌱',n:'Compost',q:'1.5 tonnes/acre',t:'Low-input crop',org:true}]}]},
+
+  {id:'ashwagand',cat:'med',e:'🌿',en:'Ashwagandha',hi:'अश्वगंधा',kn:'ಅಶ್ವಗಂಧ',ta:'அஷ்வகந்தா',te:'అశ్వగంధ',
+   sow:[8,9],harv:[1,2],days:150,yldAc:600,costAc:18000,mspPQ:null,mktAvg:250,mktMin:180,mktMax:400,
+   soil:{type:'Sandy Loam / Red Loam',ph:'7.5–8.0',color:'#CD853F',notes:'Light, sandy, slightly alkaline. Dry, less fertile soil preferred. Rajasthan/MP ideal.',quality:'medium'},
+   grades:{A:{tip:'Root powder >5% withanolides. Rs.300-400/kg',price:320},B:{tip:'Standard extract. Rs.200-280/kg',price:240},C:{tip:'Low alkaloid. Rs.140-190/kg',price:160}},
+   fert:[{wk:'Week 1',items:[{i:'🌱',n:'Compost only',q:'1 tonne/acre',t:'Thrives in low fertility — over-fertilizing reduces alkaloids',org:true}]}]},
+
+  {id:'neem',cat:'med',e:'🌳',en:'Neem',hi:'नीम',kn:'ಬೇವು',ta:'வேப்பமரம்',te:'వేప',
+   sow:[6,7],harv:[4,5],days:365,yldAc:2000,costAc:8000,mspPQ:null,mktAvg:15,mktMin:10,mktMax:30,
+   soil:{type:'Any Well-drained Soil',ph:'6.2–8.5',color:'#8B7355',notes:'Extremely adaptable. Grows in dry, poor, rocky soil. Very drought tolerant.',quality:'poor'},
+   grades:{A:{tip:'Seed oil >40%, leaf biomass. Rs.20-30/kg seed',price:22},B:{tip:'Standard. Rs.12-18/kg',price:15},C:{tip:'Low oil. Rs.7-11/kg',price:9}},
+   fert:[{wk:'Year 1 only',items:[{i:'🌱',n:'FYM',q:'5 kg per pit',t:'Minimal care needed after establishment',org:true}]}]},
+
+  {id:'stevia',cat:'med',e:'🍃',en:'Stevia',hi:'स्टेविया',kn:'ಸ್ಟೀವಿಯಾ',ta:'ஸ்டீவியா',te:'స్టీవియా',
+   sow:[2,3],harv:[6,7],days:120,yldAc:1500,costAc:45000,mspPQ:null,mktAvg:180,mktMin:120,mktMax:280,
+   soil:{type:'Sandy Loam / Well-drained Loam',ph:'6.5–7.5',color:'#DEB887',notes:'Well-drained, slightly acidic to neutral sandy loam. Good drainage critical.',quality:'good'},
+   grades:{A:{tip:'Dried leaf >8% stevioside. Rs.200-280/kg',price:220},B:{tip:'Standard. Rs.140-190/kg',price:160},C:{tip:'Low glycoside. Rs.100-130/kg',price:115}},
+   fert:[{wk:'Week 1',items:[{i:'🌱',n:'Vermicompost',q:'2 tonnes/acre',t:'Organic management preferred',org:true}]}]},
+
+  // ── SPICES (6) ──
+  {id:'pepper',cat:'spice',e:'🫙',en:'Black Pepper',hi:'काली मिर्च',kn:'ಕಾಳು ಮೆಣಸು',ta:'மிளகு',te:'మిరియాలు',
+   sow:[5,6],harv:[11,12],days:180,yldAc:500,costAc:35000,mspPQ:null,mktAvg:450,mktMin:350,mktMax:650,
+   soil:{type:'Laterite / Red Loam',ph:'5.5–6.5',color:'#8B3A3A',notes:'Deep laterite/red loam. Kerala hilly laterite ideal. High rainfall 2000mm+.',quality:'good'},
+   grades:{A:{tip:'Bold grade 550g/L density. Rs.500-650/kg',price:560},B:{tip:'MG1 grade. Rs.400-490/kg',price:440},C:{tip:'Light grade. Rs.320-390/kg',price:355}},
+   fert:[{wk:'June (Pre-monsoon)',items:[{i:'🌱',n:'FYM + Bone meal',q:'2kg+500g per vine',t:'Apply in ring around vine',org:true}]},{wk:'September',items:[{i:'🌿',n:'Neem cake',q:'200g per vine',t:'Pest and disease control',org:true}]}]},
+
+  {id:'cardamom',cat:'spice',e:'💚',en:'Cardamom',hi:'इलायची',kn:'ಏಲಕ್ಕಿ',ta:'ஏலக்காய்',te:'యాలకులు',
+   sow:[6,7],harv:[10,11],days:180,yldAc:200,costAc:50000,mspPQ:null,mktAvg:2000,mktMin:1500,mktMax:3000,
+   soil:{type:'Forest Loam / Laterite',ph:'5.0–6.5',color:'#4A2C2A',notes:'Deep forest loam under shade. Kerala/Karnataka Western Ghats ideal. High humidity.',quality:'good'},
+   grades:{A:{tip:'Bold seeds, green capsule. Rs.2200-3000/kg',price:2400},B:{tip:'Medium capsule. Rs.1600-2100/kg',price:1800},C:{tip:'Small/pale. Rs.1200-1500/kg',price:1300}},
+   fert:[{wk:'June',items:[{i:'🌱',n:'FYM + Vermicompost',q:'2kg+1kg per clump',t:'Under shade, forest floor mulch',org:true}]}]},
+
+  {id:'coriander',cat:'spice',e:'🌿',en:'Coriander',hi:'धनिया',kn:'ಕೊತ್ತಂಬರಿ',ta:'கொத்தமல்லி',te:'కొత్తిమీర',
+   sow:[10,11],harv:[1,2],days:90,yldAc:400,costAc:12000,mspPQ:null,mktAvg:80,mktMin:50,mktMax:200,
+   soil:{type:'Loamy / Sandy Loam',ph:'6.0–7.5',color:'#C4A35A',notes:'Well-drained, fertile loam. Rajasthan/MP dry soil gives aromatic seeds.',quality:'good'},
+   grades:{A:{tip:'Eagle/Scooter bold seed. Rs.120-200/kg',price:140},B:{tip:'Medium grade. Rs.75-115/kg',price:90},C:{tip:'Small/broken. Rs.40-70/kg',price:55}},
+   fert:[{wk:'Week 1',items:[{i:'🌱',n:'FYM',q:'2 tonnes/acre',t:'Light organic dressing',org:true}]}]},
+
+  {id:'cumin',cat:'spice',e:'⭐',en:'Cumin/Jeera',hi:'जीरा',kn:'ಜೀರಿಗೆ',ta:'சீரகம்',te:'జీలకర్ర',
+   sow:[11,12],harv:[2,3],days:90,yldAc:300,costAc:14000,mspPQ:null,mktAvg:250,mktMin:180,mktMax:450,
+   soil:{type:'Sandy Loam / Light Loam',ph:'7.0–8.0',color:'#F5DEB3',notes:'Well-drained, light, neutral to alkaline soil. Rajasthan/Gujarat dry climate.',quality:'medium'},
+   grades:{A:{tip:'Bold, uniform, deep brown. Rs.300-450/kg',price:340},B:{tip:'Medium. Rs.220-290/kg',price:255},C:{tip:'Small/pale. Rs.160-210/kg',price:180}},
+   fert:[{wk:'Week 1',items:[{i:'🌱',n:'FYM',q:'2 tonnes/acre',t:'Minimal input crop',org:true}]}]},
+
+  {id:'fennel',cat:'spice',e:'🌾',en:'Fennel/Saunf',hi:'सौंफ',kn:'ಬಡಿಸೋಪು',ta:'பெருஞ்சீரகம்',te:'సోంపు',
+   sow:[10,11],harv:[2,3],days:120,yldAc:400,costAc:12000,mspPQ:null,mktAvg:120,mktMin:80,mktMax:220,
+   soil:{type:'Sandy Loam / Loamy',ph:'6.5–7.5',color:'#C4A35A',notes:'Deep, well-drained, fertile loam. Gujarat/Rajasthan best producers.',quality:'good'},
+   grades:{A:{tip:'Bold Lucknow/Gujarat grade. Rs.150-220/kg',price:170},B:{tip:'Medium. Rs.100-140/kg',price:120},C:{tip:'Small/broken. Rs.60-90/kg',price:75}},
+   fert:[{wk:'Week 1',items:[{i:'🌱',n:'FYM',q:'2 tonnes/acre',t:'Light organic',org:true}]}]},
+
+  {id:'fenugreek',cat:'spice',e:'🍂',en:'Fenugreek/Methi',hi:'मेथी',kn:'ಮೆಂತ್ಯ',ta:'வெந்தயம்',te:'మేంతి',
+   sow:[10,11],harv:[1,2],days:60,yldAc:500,costAc:8000,mspPQ:null,mktAvg:70,mktMin:45,mktMax:120,
+   soil:{type:'Loamy / Sandy Loam',ph:'6.0–7.0',color:'#C4A35A',notes:'Well-drained, moderately fertile. Short duration, easy to grow.',quality:'medium'},
+   grades:{A:{tip:'Bold yellow seeds. Rs.90-120/kg',price:105},B:{tip:'Medium. Rs.60-88/kg',price:72},C:{tip:'Small/impure. Rs.35-55/kg',price:44}},
+   fert:[{wk:'Week 1',items:[{i:'🌱',n:'Compost',q:'1 tonne/acre',t:'Low input — fixes its own nitrogen',org:true}]}]},
+];
+
+const SEASONS=[
+  {id:'kharif',e:'🌧️',en:'Kharif',hi:'खरीफ',kn:'ಖರೀಫ್',ta:'கரீப்',te:'ఖరీఫ్',m:'Jun–Nov'},
+  {id:'rabi',  e:'❄️', en:'Rabi',  hi:'रबी',  kn:'ರಾಬಿ',  ta:'ரபி',  te:'రబీ',  m:'Nov–Apr'},
+  {id:'summer',e:'☀️', en:'Summer',hi:'गर्मी',kn:'ಬೇಸಿಗೆ',ta:'கோடை',te:'వేసవి',m:'Mar–Jun'},
+  {id:'annual',e:'🔄', en:'Annual',hi:'वार्षिक',kn:'ವಾರ್ಷಿಕ',ta:'வருடாந்திர',te:'వార్షిక',m:'Year-round'},
+];
+
+const SOILTYPES=[
+  {id:'black',n:'Black Cotton (Vertisol)',c:'#1C1C1C',crops:'Cotton, Jowar, Wheat, Soybean',desc:'High clay, water retentive, swells when wet. Deep cracks in dry season.'},
+  {id:'red',  n:'Red Loam',c:'#8B3A3A',crops:'Groundnut, Chilli, Turmeric, Ginger, Rice',desc:'Iron-rich, porous, low nitrogen. Good drainage. Karnataka/AP/TN.'},
+  {id:'loamy', n:'Loamy / Alluvial',c:'#8B6914',crops:'Wheat, Sugarcane, Vegetables, Banana',desc:'Ideal balanced soil. Good water retention, drainage, and nutrients.'},
+  {id:'sandy', n:'Sandy / Sandy Loam',c:'#F5DEB3',crops:'Millet, Cumin, Fennel, Groundnut',desc:'Light, fast-draining, low nutrients. Needs irrigation and organic matter.'},
+  {id:'laterite',n:'Laterite',c:'#CD5C5C',crops:'Rice, Coconut, Mango, Pepper, Cardamom',desc:'Iron/aluminium rich. Acidic. Kerala/Goa/Karnataka hills.'},
+  {id:'clay',  n:'Clay / Heavy Clay',c:'#3D2B1F',crops:'Rice, Paddy, Sugarcane',desc:'Very water retentive. Waterlogged conditions suit paddy.'},
+];
+
+// ════ WATER REQUIREMENT DATABASE ════
+// litersPerAcrePerDay = average daily water need per acre
+// Source: ICAR, KVK, FAO irrigation guidelines India
+const WATER_DB={
+  // Vegetables
+  tomato:   {lpd:2500, freq:'Every 2-3 days',  method:'drip',    drought:'Low'},
+  onion:    {lpd:1800, freq:'Every 4-5 days',  method:'sprinkler',drought:'Medium'},
+  potato:   {lpd:2200, freq:'Every 3-4 days',  method:'furrow',  drought:'Low'},
+  brinjal:  {lpd:2000, freq:'Every 3 days',    method:'drip',    drought:'Medium'},
+  carrot:   {lpd:1600, freq:'Every 4-5 days',  method:'sprinkler',drought:'Medium'},
+  chilli:   {lpd:2000, freq:'Every 3-4 days',  method:'drip',    drought:'Medium'},
+  okra:     {lpd:1800, freq:'Every 3-4 days',  method:'furrow',  drought:'Medium'},
+  spinach:  {lpd:1500, freq:'Every 2-3 days',  method:'sprinkler',drought:'Low'},
+  cabbage:  {lpd:2200, freq:'Every 3 days',    method:'sprinkler',drought:'Low'},
+  cucumber: {lpd:2800, freq:'Every 2 days',    method:'drip',    drought:'Low'},
+  pumpkin:  {lpd:1800, freq:'Every 4 days',    method:'furrow',  drought:'Medium'},
+  garlic:   {lpd:1200, freq:'Every 5-7 days',  method:'furrow',  drought:'Medium'},
+  // Grains
+  rice:     {lpd:6000, freq:'Continuous flood',method:'flood',   drought:'Very Low'},
+  wheat:    {lpd:1500, freq:'Every 10-12 days',method:'furrow',  drought:'Medium'},
+  maize:    {lpd:2000, freq:'Every 7-8 days',  method:'furrow',  drought:'Medium'},
+  millet:   {lpd:800,  freq:'Every 10-15 days',method:'furrow',  drought:'Very High'},
+  jowar:    {lpd:900,  freq:'Every 10-14 days',method:'furrow',  drought:'High'},
+  groundnut:{lpd:1500, freq:'Every 8-10 days', method:'furrow',  drought:'High'},
+  soybean:  {lpd:1600, freq:'Every 7-8 days',  method:'furrow',  drought:'Medium'},
+  bengalgram:{lpd:900, freq:'Every 12-15 days',method:'furrow',  drought:'High'},
+  // Fruits
+  mango:    {lpd:1200, freq:'Every 7-10 days', method:'basin',   drought:'High'},
+  banana:   {lpd:4000, freq:'Every 2-3 days',  method:'drip',    drought:'Low'},
+  papaya:   {lpd:2500, freq:'Every 3-4 days',  method:'drip',    drought:'Low'},
+  guava:    {lpd:1000, freq:'Every 7-10 days', method:'basin',   drought:'High'},
+  grapes:   {lpd:1800, freq:'Every 3-5 days',  method:'drip',    drought:'Medium'},
+  lemon:    {lpd:1200, freq:'Every 7 days',    method:'basin',   drought:'High'},
+  coconut:  {lpd:1500, freq:'Every 4-5 days',  method:'basin',   drought:'Medium'},
+  // Cash Crops
+  cotton:   {lpd:2000, freq:'Every 8-10 days', method:'furrow',  drought:'Medium'},
+  sugar:    {lpd:5000, freq:'Every 7-10 days', method:'furrow',  drought:'Low'},
+  turmeric: {lpd:2200, freq:'Every 5-7 days',  method:'sprinkler',drought:'Low'},
+  ginger:   {lpd:2000, freq:'Every 5-6 days',  method:'sprinkler',drought:'Low'},
+  sunflower:{lpd:1400, freq:'Every 8-10 days', method:'furrow',  drought:'Medium'},
+  tobacco:  {lpd:1600, freq:'Every 7-8 days',  method:'furrow',  drought:'Medium'},
+  // Flowers
+  rose:     {lpd:2000, freq:'Every 2-3 days',  method:'drip',    drought:'Low'},
+  marigold: {lpd:1500, freq:'Every 3-4 days',  method:'sprinkler',drought:'Medium'},
+  jasmine:  {lpd:1200, freq:'Every 4-5 days',  method:'basin',   drought:'Medium'},
+  chrysanth:{lpd:1800, freq:'Every 2-3 days',  method:'sprinkler',drought:'Low'},
+  // Medicinal
+  aloevera: {lpd:400,  freq:'Every 15-20 days',method:'furrow',  drought:'Very High'},
+  tulsi:    {lpd:800,  freq:'Every 5-7 days',  method:'pot/furrow',drought:'High'},
+  ashwagand:{lpd:600,  freq:'Every 10-15 days',method:'furrow',  drought:'Very High'},
+  neem:     {lpd:500,  freq:'Every 15-20 days',method:'basin',   drought:'Very High'},
+  stevia:   {lpd:1800, freq:'Every 3-4 days',  method:'drip',    drought:'Low'},
+  // Spices
+  pepper:   {lpd:2500, freq:'Every 3-4 days',  method:'basin',   drought:'Low'},
+  cardamom: {lpd:3000, freq:'Every 2-3 days',  method:'sprinkler',drought:'Very Low'},
+  coriander:{lpd:1000, freq:'Every 6-8 days',  method:'sprinkler',drought:'High'},
+  cumin:    {lpd:700,  freq:'Every 10-12 days',method:'furrow',  drought:'High'},
+  fennel:   {lpd:900,  freq:'Every 8-10 days', method:'furrow',  drought:'High'},
+  fenugreek:{lpd:1000, freq:'Every 7-8 days',  method:'furrow',  drought:'High'},
+};
+
+// Water method translations
+const WATER_METHOD={
+  drip:      {en:'Drip Irrigation (Best)',hi:'ड्रिप सिंचाई (सर्वोत्तम)',kn:'ಹನಿ ನೀರಾವರಿ (ಉತ್ತಮ)',ta:'சொட்டு நீர்ப்பாசனம் (சிறந்தது)',te:'డ్రిప్ సించాయి (ఉత్తమం)'},
+  sprinkler: {en:'Sprinkler Irrigation',  hi:'स्प्रिंकलर सिंचाई',kn:'ಸ್ಪ್ರಿಂಕ್ಲರ್ ನೀರಾವರಿ',ta:'தெளிப்பு நீர்ப்பாசனம்',te:'స్ప్రింక్లర్ సించాయి'},
+  furrow:    {en:'Furrow / Channel',      hi:'नाली सिंचाई',kn:'ಕಾಲುವೆ ನೀರಾವರಿ',ta:'வாய்க்கால் பாசனம்',te:'కాలువ సించాయి'},
+  basin:     {en:'Basin / Ring Method',   hi:'थाला सिंचाई',kn:'ತಟ್ಟೆ ನೀರಾವರಿ',ta:'வட்ட முறை பாசனம்',te:'వలయ పద్ధతి సించాయి'},
+  flood:     {en:'Flood / Paddy Method',  hi:'बाढ़ सिंचाई (धान)',kn:'ಪ್ರವಾಹ ನೀರಾವರಿ (ಭತ್ತ)',ta:'வெள்ள பாசனம் (நெல்)',te:'వరద సించాయి (వరి)'},
+  'pot/furrow':{en:'Pot / Furrow',        hi:'गमला/नाली',kn:'ಕುಂಡ/ಕಾಲುವೆ',ta:'தொட்டி/வாய்க்கால்',te:'కుండ/కాలువ'},
+};
+
+const DROUGHT_LBL={
+  'Very High':{en:'Very Drought Tolerant 🌵',hi:'बहुत सूखा सहिष्णु',kn:'ಬಹಳ ಬರ ಸಹಿಷ್ಣು',ta:'மிகவும் வறட்சி தாங்கும்',te:'చాలా కరువు తట్టుకుంటుంది'},
+  'High':     {en:'Drought Tolerant 🌿',     hi:'सूखा सहिष्णु',kn:'ಬರ ಸಹಿಷ್ಣು',ta:'வறட்சி தாங்கும்',te:'కరువు తట్టుకుంటుంది'},
+  'Medium':   {en:'Moderate Water Need 💧',  hi:'मध्यम पानी जरूरत',kn:'ಮಧ್ಯಮ ನೀರಿನ ಅಗತ್ಯ',ta:'மிதமான நீர் தேவை',te:'మధ్యస్థ నీటి అవసరం'},
+  'Low':      {en:'Needs Regular Water 💦',  hi:'नियमित पानी जरूरी',kn:'ನಿಯಮಿತ ನೀರು ಅಗತ್ಯ',ta:'தொடர் நீர் தேவை',te:'క్రమం తప్పకుండా నీళ్ళు కావాలి'},
+  'Very Low': {en:'High Water Need 🌊',      hi:'अधिक पानी जरूरी',kn:'ಹೆಚ್ಚು ನೀರು ಅಗತ್ಯ',ta:'அதிக நீர் தேவை',te:'ఎక్కువ నీళ్ళు కావాలి'},
+};
+
+// Water labels in all languages
+const WATER_LABELS={
+  en:{title:'💧 Water Requirements',total:'Total Water / Day',perAcre:'Per Acre / Day',weekly:'Total Water / Week',method:'Best Irrigation Method',freq:'Watering Frequency',drought:'Drought Tolerance'},
+  hi:{title:'💧 पानी की आवश्यकता',total:'कुल पानी / दिन',perAcre:'प्रति एकड़ / दिन',weekly:'कुल पानी / सप्ताह',method:'सर्वोत्तम सिंचाई विधि',freq:'सिंचाई की आवृत्ति',drought:'सूखा सहिष्णुता'},
+  kn:{title:'💧 ನೀರಿನ ಅಗತ್ಯತೆ',total:'ಒಟ್ಟು ನೀರು / ದಿನ',perAcre:'ಪ್ರತಿ ಎಕರೆ / ದಿನ',weekly:'ಒಟ್ಟು ನೀರು / ವಾರ',method:'ಉತ್ತಮ ನೀರಾವರಿ ವಿಧಾನ',freq:'ನೀರು ಹಾಕುವ ಆವರ್ತನ',drought:'ಬರ ಸಹಿಷ್ಣುತೆ'},
+  ta:{title:'💧 நீர் தேவை',total:'மொத்த நீர் / நாள்',perAcre:'ஏக்கருக்கு / நாள்',weekly:'மொத்த நீர் / வாரம்',method:'சிறந்த பாசன முறை',freq:'நீர்ப்பாசன அலைவெண்',drought:'வறட்சி தாங்கும் திறன்'},
+  te:{title:'💧 నీటి అవసరం',total:'మొత్తం నీరు / రోజు',perAcre:'ఎకరాకు / రోజు',weekly:'మొత్తం నీరు / వారం',method:'ఉత్తమ సించాయి పద్ధతి',freq:'నీళ్ళు పోయే పౌనఃపున్యం',drought:'కరువు తట్టుకునే శక్తి'},
+};
+
+function getWaterCard(cropId, acres){
+  const w=WATER_DB[cropId];
+  if(!w) return '';
+  const WL=WATER_LABELS[lang]||WATER_LABELS.en;
+  const totalDay=Math.round(w.lpd*acres);
+  const totalWeek=Math.round(w.lpd*acres*7);
+  const meth=(WATER_METHOD[w.method]&&WATER_METHOD[w.method][lang])||w.method;
+  const dlab=(DROUGHT_LBL[w.drought]&&DROUGHT_LBL[w.drought][lang])||w.drought;
+  return `<div style="background:#e3f2fd;border-radius:12px;padding:14px;margin-bottom:10px;border-left:4px solid #0d47a1;">
+    <div style="font-size:13px;font-weight:700;color:#0d47a1;margin-bottom:10px;">${WL.title} (${acres} acres)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+      <div style="background:#fff;border-radius:9px;padding:10px;text-align:center;">
+        <div style="font-size:10px;font-weight:700;color:#888;margin-bottom:2px;">${WL.perAcre}</div>
+        <div style="font-size:18px;font-weight:700;color:#0d47a1;">${w.lpd.toLocaleString('en-IN')} L</div>
+      </div>
+      <div style="background:#fff;border-radius:9px;padding:10px;text-align:center;">
+        <div style="font-size:10px;font-weight:700;color:#888;margin-bottom:2px;">${WL.total}</div>
+        <div style="font-size:18px;font-weight:700;color:#1565c0;">${totalDay.toLocaleString('en-IN')} L</div>
+      </div>
+      <div style="background:#fff;border-radius:9px;padding:10px;text-align:center;">
+        <div style="font-size:10px;font-weight:700;color:#888;margin-bottom:2px;">${WL.weekly}</div>
+        <div style="font-size:18px;font-weight:700;color:#1a237e;">${(totalWeek/1000).toFixed(1)} KL</div>
+      </div>
+      <div style="background:#fff;border-radius:9px;padding:10px;text-align:center;">
+        <div style="font-size:10px;font-weight:700;color:#888;margin-bottom:2px;">${WL.freq}</div>
+        <div style="font-size:13px;font-weight:700;color:#0d47a1;">${w.freq}</div>
+      </div>
+    </div>
+    <div style="background:#fff;border-radius:9px;padding:10px;margin-bottom:6px;">
+      <span style="font-size:11px;font-weight:700;color:#888;">${WL.method}: </span>
+      <span style="font-size:13px;font-weight:700;color:#0d47a1;">${meth}</span>
+    </div>
+    <div style="background:#fff;border-radius:9px;padding:8px 10px;">
+      <span style="font-size:11px;font-weight:700;color:#888;">${WL.drought}: </span>
+      <span style="font-size:13px;font-weight:700;color:#1565c0;">${dlab}</span>
+    </div>
+  </div>`;
+}
+
+const FERT_NAMES={
+  'Vermicompost':          {hi:'वर्मीकम्पोस्ट',kn:'ವರ್ಮಿಕಂಪೋಸ್ಟ್',ta:'மண்புழு உரம்',te:'వర్మీకంపోస్ట్'},
+  'DAP (Di-ammonium Phosphate)':{hi:'डीएपी (डाई-अमोनियम फॉस्फेट)',kn:'ಡಿಎಪಿ',ta:'டிஏபி',te:'డీఏపీ'},
+  'DAP':                   {hi:'डीएपी',kn:'ಡಿಎಪಿ',ta:'டிஏபி',te:'డీఏపీ'},
+  'Urea':                  {hi:'यूरिया',kn:'ಯೂರಿಯಾ',ta:'யூரியா',te:'యూరియా'},
+  'Neem Cake (Organic)':   {hi:'नीम केक (जैविक)',kn:'ಬೇವಿನ ಹಿಂಡಿ (ಜೈವಿಕ)',ta:'வேப்ப பிண்ணாக்கு',te:'వేప పిండి'},
+  'Neem Cake':             {hi:'नीम केक',kn:'ಬೇವಿನ ಹಿಂಡಿ',ta:'வேப்ப பிண்ணாக்கு',te:'వేప పిండి'},
+  'Neem cake':             {hi:'नीम केक',kn:'ಬೇವಿನ ಹಿಂಡಿ',ta:'வேப்ப பிண்ணாக்கு',te:'వేప పిండి'},
+  'Neem Oil Spray':        {hi:'नीम तेल स्प्रे',kn:'ಬೇವಿನ ಎಣ್ಣೆ ಸ್ಪ್ರೇ',ta:'வேப்ப எண்ணெய் தெளிப்பு',te:'వేప నూనె పిచికారీ'},
+  'Neem Oil':              {hi:'नीम तेल',kn:'ಬೇವಿನ ಎಣ್ಣೆ',ta:'வேப்ப எண்ணெய்',te:'వేప నూనె'},
+  'Potassium Sulphate (SOP)':{hi:'पोटेशियम सल्फेट',kn:'ಪೊಟ್ಯಾಷಿಯಂ ಸಲ್ಫೇಟ್',ta:'பொட்டாசியம் சல்பேட்',te:'పొటాషియం సల్ఫేట్'},
+  'Potash (MOP)':          {hi:'पोटाश (एमओपी)',kn:'ಪೊಟಾಶ್ (ಎಂಒಪಿ)',ta:'பொட்டாஷ் (எம்ஓபி)',te:'పొటాష్ (ఎంఓపీ)'},
+  'Potash':                {hi:'पोटाश',kn:'ಪೊಟಾಶ್',ta:'பொட்டாஷ்',te:'పొటాష్'},
+  'Potassium Nitrate':     {hi:'पोटेशियम नाइट्रेट',kn:'ಪೊಟ್ಯಾಷಿಯಂ ನೈಟ್ರೇಟ್',ta:'பொட்டாசியம் நைட்ரேட்',te:'పొటాషియం నైట్రేట్'},
+  'Compost Tea Spray':     {hi:'कम्पोस्ट चाय स्प्रे',kn:'ಕಾಂಪೋಸ್ಟ್ ಟೀ ಸ್ಪ್ರೇ',ta:'உரக் தேநீர் தெளிப்பு',te:'కంపోస్ట్ టీ పిచికారీ'},
+  'Compost':               {hi:'कम्पोस्ट',kn:'ಕಾಂಪೋಸ್ಟ್',ta:'உரம்',te:'కంపోస్ట్'},
+  'FYM (Farm Yard Manure)':{hi:'गोबर खाद',kn:'ಸಗಣಿ ಗೊಬ್ಬರ',ta:'மாட்டுச் சாணம்',te:'పశువుల ఎరువు'},
+  'FYM':                   {hi:'गोबर खाद',kn:'ಸಗಣಿ ಗೊಬ್ಬರ',ta:'மாட்டுச் சாணம்',te:'పశువుల ఎరువు'},
+  'FYM / Press mud':       {hi:'गोबर खाद / प्रेस मड',kn:'ಸಗಣಿ / ಪ್ರೆಸ್ ಮಡ್',ta:'சாணம் / பிரஸ் மட்',te:'పశువుల ఎరువు / ప్రెస్ మడ్'},
+  'FYM / Green Manure':    {hi:'गोबर खाद / हरी खाद',kn:'ಸಗಣಿ / ಹಸಿರು ಗೊಬ್ಬರ',ta:'சாணம் / பச்சை உரம்',te:'పశువుల ఎరువు / పచ్చి ఎరువు'},
+  'FYM + Bone meal':       {hi:'गोबर खाद + हड्डी चूर्ण',kn:'ಸಗಣಿ + ಮೂಳೆ ಹಿಟ್ಟು',ta:'சாணம் + எலும்பு மாவு',te:'పశువుల ఎరువు + ఎముక పొడి'},
+  'FYM + Vermicompost':    {hi:'गोबर खाद + वर्मीकम्पोस्ट',kn:'ಸಗಣಿ + ವರ್ಮಿಕಂಪೋಸ್ಟ್',ta:'சாணம் + மண்புழு உரம்',te:'పశువుల ఎరువు + వర్మీకంపోస్ట్'},
+  'Neem-coated Urea':      {hi:'नीम लेपित यूरिया',kn:'ಬೇವು ಲೇಪಿತ ಯೂರಿಯಾ',ta:'வேப்பு பூசிய யூரியா',te:'వేప పూసిన యూరియా'},
+  'Rhizobium culture + FYM':{hi:'राइजोबियम कल्चर + गोबर खाद',kn:'ರೈಜೋಬಿಯಂ + ಸಗಣಿ ಗೊಬ್ಬರ',ta:'ரைசோபியம் + சாணம்',te:'రైజోబియం + పశువుల ఎరువు'},
+  'Rhizobium + PSB Culture':{hi:'राइजोबियम + पीएसबी कल्चर',kn:'ರೈಜೋಬಿಯಂ + ಪಿಎಸ್‌ಬಿ',ta:'ரைசோபியம் + பிஸ்பி',te:'రైజోబియం + పిఎస్‌బి'},
+  'Rhizobium inoculant':   {hi:'राइजोबियम इनोकुलेंट',kn:'ರೈಜೋಬಿಯಂ ಇನಾಕ್ಯುಲೆಂಟ್',ta:'ரைசோபியம்',te:'రైజోబియం'},
+  'Gypsum + FYM':          {hi:'जिप्सम + गोबर खाद',kn:'ಜಿಪ್ಸಮ್ + ಸಗಣಿ ಗೊಬ್ಬರ',ta:'ஜிப்சம் + சாணம்',te:'జిప్సం + పశువుల ఎరువు'},
+  'Trichoderma':           {hi:'ट्राइकोडर्मा',kn:'ಟ್ರೈಕೋಡರ್ಮಾ',ta:'டிரைக்கோடெர்மா',te:'ట్రైకోడెర్మా'},
+  'Well-rotted FYM':       {hi:'सड़ी हुई गोबर खाद',kn:'ಕೊಳೆತ ಸಗಣಿ ಗೊಬ್ಬರ',ta:'நன்கு அழுகிய சாணம்',te:'బాగా కుళ్ళిన పశువుల ఎరువు'},
+  'Vermicompost + Compost':{hi:'वर्मीकम्पोस्ट + कम्पोस्ट',kn:'ವರ್ಮಿಕಂಪೋಸ್ಟ್ + ಕಾಂಪೋಸ್ಟ್',ta:'மண்புழு உரம் + உரம்',te:'వర్మీకంపోస్ట్ + కంపోస్ట్'},
+  'NPK 13:0:45':           {hi:'एनपीके 13:0:45',kn:'ಎನ್‌ಪಿಕೆ 13:0:45',ta:'என்பிகே 13:0:45',te:'ఎన్‌పికె 13:0:45'},
+  'NPK 20:20:20':          {hi:'एनपीके 20:20:20',kn:'ಎನ್‌ಪಿಕೆ 20:20:20',ta:'என்பிகே 20:20:20',te:'ఎన్‌పికె 20:20:20'},
+  'NPK mix':               {hi:'एनपीके मिश्रण',kn:'ಎನ್‌ಪಿಕೆ ಮಿಶ್ರಣ',ta:'என்பிகே கலவை',te:'ఎన్‌పికె మిశ్రమం'},
+  'NPK 19:19:19':          {hi:'एनपीके 19:19:19',kn:'ಎನ್‌ಪಿಕೆ 19:19:19',ta:'என்பிகே 19:19:19',te:'ఎన్‌పికె 19:19:19'},
+  'DAP + MOP':             {hi:'डीएपी + एमओपी',kn:'ಡಿಎಪಿ + ಎಂಒಪಿ',ta:'டிஏபி + எம்ஓபி',te:'డీఏపీ + ఎంఓపీ'},
+  'Urea + Potash':         {hi:'यूरिया + पोटाश',kn:'ಯೂರಿಯಾ + ಪೊಟಾಶ್',ta:'யூரியா + பொட்டாஷ்',te:'యూరియా + పొటాష్'},
+  'Sulphate of Potash':    {hi:'पोटाश सल्फेट',kn:'ಪೊಟಾಶ್ ಸಲ್ಫೇಟ್',ta:'பொட்டாஷ் சல்பேட்',te:'పొటాష్ సల్ఫేట్'},
+  'NPK + Borax':           {hi:'एनपीके + बोरेक्स',kn:'ಎನ್‌ಪಿಕೆ + ಬೊರಾಕ್ಸ್',ta:'என்பிகே + போராக்ஸ்',te:'ఎన్‌పికె + బోరాక్స్'},
+  'FYM + Compost':         {hi:'गोबर खाद + कम्पोस्ट',kn:'ಸಗಣಿ + ಕಾಂಪೋಸ್ಟ್',ta:'சாணம் + உரம்',te:'పశువుల ఎరువు + కంపోస్ట్'},
+  'Compost only':          {hi:'केवल कम्पोस्ट',kn:'ಕೇವಲ ಕಾಂಪೋಸ್ಟ್',ta:'உரம் மட்டும்',te:'కేవలం కంపోస్ట్'},
+};
+
+// Get fertilizer name in current language
+function fertName(n){
+  if(lang==='en') return n;
+  const t=FERT_NAMES[n];
+  return (t&&t[lang])?t[lang]:n;
+}
+
+// Fertilizer week stage translations
+const FERT_WEEKS={
+  hi:{'Week 1':'सप्ताह 1','Week 2':'सप्ताह 2','Week 3':'सप्ताह 3','Week 4':'सप्ताह 4','Week 5':'सप्ताह 5','Week 6':'सप्ताह 6','Week 7':'सप्ताह 7','Week 8':'सप्ताह 8','Week 10':'सप्ताह 10','Month 1':'माह 1','Month 3':'माह 3','Month 6':'माह 6','Sowing':'बुवाई','Transplant':'रोपाई','Planting':'रोपण','Vegetative':'वनस्पति','Flowering':'फूल आना','Bulb Formation':'कंद विकास','Crown Root':'जड़','Jointing':'जोड़','Panicle':'बाली','Square':'वर्गीकरण','Boll':'बोल','Berry':'बेरी','Fruit dev':'फल विकास','Pre-flower':'फूल से पहले','January':'जनवरी','February':'फरवरी','June':'जून','July':'जुलाई','September':'सितंबर','Annual':'वार्षिक','Year 1':'वर्ष 1'},
+  kn:{'Week 1':'ವಾರ 1','Week 2':'ವಾರ 2','Week 3':'ವಾರ 3','Week 4':'ವಾರ 4','Week 5':'ವಾರ 5','Week 6':'ವಾರ 6','Week 7':'ವಾರ 7','Week 8':'ವಾರ 8','Week 10':'ವಾರ 10','Month 1':'ತಿಂಗಳು 1','Month 3':'ತಿಂಗಳು 3','Month 6':'ತಿಂಗಳು 6','Sowing':'ಬಿತ್ತನೆ','Transplant':'ನಾಟಿ','Planting':'ನೆಡುವಿಕೆ','Vegetative':'ಸಸ್ಯ ಬೆಳವಣಿಗೆ','Flowering':'ಹೂ ಬಿಡುವಿಕೆ','Bulb Formation':'ಗಡ್ಡೆ ರಚನೆ','Crown Root':'ಮೂಲ','Jointing':'ಕಾಂಡ','Panicle':'ತೆನೆ','Square':'ಸ್ಕ್ವೇರ್','Boll':'ಹಣ್ಣು','Berry':'ಬೆರ್ರಿ','Fruit dev':'ಹಣ್ಣು ಬೆಳವಣಿಗೆ','Pre-flower':'ಹೂ ಮೊದಲು','January':'ಜನವರಿ','February':'ಫೆಬ್ರವರಿ','June':'ಜೂನ್','July':'ಜುಲೈ','September':'ಸೆಪ್ಟೆಂಬರ್','Annual':'ವಾರ್ಷಿಕ','Year 1':'ವರ್ಷ 1'},
+  ta:{'Week 1':'வாரம் 1','Week 2':'வாரம் 2','Week 3':'வாரம் 3','Week 4':'வாரம் 4','Week 5':'வாரம் 5','Week 6':'வாரம் 6','Week 7':'வாரம் 7','Week 8':'வாரம் 8','Week 10':'வாரம் 10','Month 1':'மாதம் 1','Month 3':'மாதம் 3','Month 6':'மாதம் 6','Sowing':'விதைப்பு','Transplant':'நாற்று நடவு','Planting':'நடவு','Vegetative':'தாவர வளர்ச்சி','Flowering':'பூக்கும் நிலை','Bulb Formation':'கிழங்கு உருவாக்கம்','Crown Root':'வேர்','Jointing':'கணுக்கட்டு','Panicle':'கதிர்','Square':'ஸ்கொயர்','Boll':'காய்','Berry':'பழம்','Fruit dev':'பழ வளர்ச்சி','Pre-flower':'பூவுக்கு முன்','January':'ஜனவரி','February':'பிப்ரவரி','June':'ஜூன்','July':'ஜூலை','September':'செப்டம்பர்','Annual':'வருடாந்திர','Year 1':'ஆண்டு 1'},
+  te:{'Week 1':'వారం 1','Week 2':'వారం 2','Week 3':'వారం 3','Week 4':'వారం 4','Week 5':'వారం 5','Week 6':'వారం 6','Week 7':'వారం 7','Week 8':'వారం 8','Week 10':'వారం 10','Month 1':'నెల 1','Month 3':'నెల 3','Month 6':'నెల 6','Sowing':'విత్తనం','Transplant':'నాట్లు','Planting':'నాటడం','Vegetative':'వృక్ష పెరుగుదల','Flowering':'పుష్పించడం','Bulb Formation':'దుంప అభివృద్ధి','Crown Root':'మూలం','Jointing':'కీలు','Panicle':'శీర్షం','Square':'స్క్వేర్','Boll':'కాయ','Berry':'బెర్రీ','Fruit dev':'పండు అభివృద్ధి','Pre-flower':'పూత ముందు','January':'జనవరి','February':'ఫిబ్రవరి','June':'జూన్','July':'జులై','September':'సెప్టెంబర్','Annual':'వార్షిక','Year 1':'సంవత్సరం 1'},
+};
+
+function translateWeek(wk){
+  if(lang==='en') return wk;
+  const map=FERT_WEEKS[lang]||{};
+  let result=wk;
+  Object.keys(map).forEach(k=>{result=result.replace(k,map[k]);});
+  return result;
+}
+
+// Plant growth stages detection
+const GROWTH_STAGES=[
+  {stage:{en:'Seedling Stage',hi:'अंकुरण अवस्था',kn:'ಮೊಳಕೆ ಹಂತ',ta:'முளை நிலை',te:'మొలక దశ'},
+   desc:{en:'Plant is 1-3 weeks old. Delicate roots, first leaves forming.',hi:'1-3 सप्ताह का पौधा। कोमल जड़ें, पहली पत्तियां।',kn:'1-3 ವಾರದ ಗಿಡ. ನವಿರು ಬೇರು, ಮೊದಲ ಎಲೆಗಳು.',ta:'1-3 வார செடி. மென்மையான வேர், முதல் இலைகள்.',te:'1-3 వారాల మొక్క. సున్నితమైన వేర్లు, మొదటి ఆకులు.'},
+   tip:{en:'Water gently. Avoid strong sunlight. Apply light compost.',hi:'धीरे पानी दें। तेज धूप से बचाएं। हल्की खाद डालें।',kn:'ಮೆಲ್ಲನೆ ನೀರು ಹಾಕಿ. ತೀವ್ರ ಸೂರ್ಯ ಬೆಳಕು ತಪ್ಪಿಸಿ.',ta:'மெதுவாக நீர் பாய்ச்சவும். கடும் வெயிலைத் தவிர்க்கவும்.',te:'మెల్లగా నీళ్ళు పోయండి. తీవ్రమైన ఎండను తప్పించండి.'},
+   color:'#4caf50',icon:'🌱'},
+  {stage:{en:'Vegetative Stage',hi:'वानस्पतिक अवस्था',kn:'ಸಸ್ಯ ಬೆಳವಣಿಗೆ ಹಂತ',ta:'தாவர வளர்ச்சி நிலை',te:'వృక్ష పెరుగుదల దశ'},
+   desc:{en:'Plant growing fast. Leaves expanding, stem strengthening.',hi:'पौधा तेजी से बढ़ रहा है। पत्तियां फैल रही हैं।',kn:'ಗಿಡ ವೇಗವಾಗಿ ಬೆಳೆಯುತ್ತಿದೆ. ಎಲೆಗಳು ಹರಡುತ್ತಿವೆ.',ta:'செடி வேகமாக வளர்கிறது. இலைகள் விரிகின்றன.',te:'మొక్క వేగంగా పెరుగుతుంది. ఆకులు విస్తరిస్తున్నాయి.'},
+   tip:{en:'Apply nitrogen fertilizer (Urea). Ensure regular irrigation. Remove weeds.',hi:'नाइट्रोजन उर्वरक (यूरिया) डालें। नियमित सिंचाई करें।',kn:'ನೈಟ್ರೋಜನ್ ಗೊಬ್ಬರ (ಯೂರಿಯಾ) ಹಾಕಿ. ಕಳೆ ತೆಗೆಯಿರಿ.',ta:'யூரியா இடவும். தொடர் நீர்ப்பாசனம் செய்யவும்.',te:'యూరియా వేయండి. క్రమం తప్పకుండా నీళ్ళు పోయండి.'},
+   color:'#2e7d32',icon:'🌿'},
+  {stage:{en:'Flowering Stage',hi:'फूल आने की अवस्था',kn:'ಹೂ ಬಿಡುವ ಹಂತ',ta:'பூக்கும் நிலை',te:'పుష్పించే దశ'},
+   desc:{en:'Flowers appearing. Critical stage for yield formation.',hi:'फूल आ रहे हैं। उपज निर्माण का महत्वपूर्ण चरण।',kn:'ಹೂಗಳು ಅರಳುತ್ತಿವೆ. ಇಳುವರಿ ರಚನೆಯ ಪ್ರಮುಖ ಹಂತ.',ta:'பூக்கள் வருகின்றன. மகசூல் உருவாக்கத்தின் முக்கிய நிலை.',te:'పువ్వులు వస్తున్నాయి. దిగుబడి ఏర్పడే కీలక దశ.'},
+   tip:{en:'Apply Potash fertilizer. Spray neem oil to protect flowers. Avoid excess water.',hi:'पोटाश डालें। फूलों की रक्षा के लिए नीम तेल स्प्रे करें।',kn:'ಪೊಟಾಶ್ ಹಾಕಿ. ಹೂಗಳ ರಕ್ಷಣೆಗೆ ಬೇವಿನ ಎಣ್ಣೆ ಸ್ಪ್ರೇ.',ta:'பொட்டாஷ் இடவும். வேப்ப எண்ணெய் தெளிக்கவும்.',te:'పొటాష్ వేయండి. వేప నూనె పిచికారీ చేయండి.'},
+   color:'#ff8f00',icon:'🌸'},
+  {stage:{en:'Fruiting / Harvest Stage',hi:'फल/कटाई अवस्था',kn:'ಫಲ/ಕೊಯ್ಲು ಹಂತ',ta:'பழ/அறுவடை நிலை',te:'పండు/కోత దశ'},
+   desc:{en:'Fruits/grains forming. Plant approaching harvest time.',hi:'फल/अनाज बन रहे हैं। कटाई का समय नजदीक।',kn:'ಹಣ್ಣು/ಧಾನ್ಯ ರಚನೆ. ಕೊಯ್ಲಿನ ಸಮಯ ಹತ್ತಿರ.',ta:'பழம்/தானியம் உருவாகின்றன. அறுவடை நேரம் நெருங்குகிறது.',te:'పండు/ధాన్యం ఏర్పడుతుంది. కోత సమయం దగ్గరవుతుంది.'},
+   tip:{en:'Reduce irrigation 10 days before harvest. Check moisture content. Harvest at right time.',hi:'कटाई से 10 दिन पहले सिंचाई कम करें। सही समय पर काटें।',kn:'ಕೊಯ್ಲಿಗಿಂತ 10 ದಿನ ಮೊದಲು ನೀರು ಕಡಿಮೆ ಮಾಡಿ.',ta:'அறுவடைக்கு 10 நாட்கள் முன் நீர்ப்பாசனம் குறைக்கவும்.',te:'కోత 10 రోజుల ముందు నీళ్ళు తగ్గించండి.'},
+   color:'#e65100',icon:'🌾'},
+];
+
+const DISEASES=[
+  {n:{en:'Leaf Blight',hi:'पत्ती झुलसा',kn:'ಎಲೆ ಸುಡು',ta:'இலை தீ',te:'ఆకు తెగులు'},
+   s:{en:'Brown/black spots on leaves, yellowing edges',hi:'पत्तियों पर भूरे धब्बे',kn:'ಎಲೆಗಳ ಮೇಲೆ ಕಂದು ಕಲೆ',ta:'இலைகளில் பழுப்பு புள்ளிகள்',te:'ఆకులపై గోధుమ మచ్చలు'},
+   sol:{en:'Spray neem oil (5ml/L) weekly. Remove affected leaves. Apply compost tea.',hi:'नीम तेल (5ml/L) साप्ताहिक स्प्रे करें। प्रभावित पत्तियां हटाएं।',kn:'ಬೇವಿನ ಎಣ್ಣೆ (5ml/L) ವಾರಕ್ಕೊಮ್ಮೆ ಸಿಂಪಡಿಸಿ.',ta:'வேப்ப எண்ணெய் (5ml/L) வாரம் தெளிக்கவும்.',te:'వేప నూనె (5ml/L) వారానికి పిచికారీ.'},c:'#b71c1c'},
+  {n:{en:'Powdery Mildew',hi:'चूर्णी फफूंदी',kn:'ಪೌಡರ್ ಶಿಲೀಂಧ್ರ',ta:'பவுடரி மிலுட்',te:'పౌడరీ మిల్డ్యూ'},
+   s:{en:'White powdery coating on leaves and stems',hi:'पत्तियों पर सफेद पाउडर',kn:'ಎಲೆಗಳ ಮೇಲೆ ಬಿಳಿ ಹೊಡಿ',ta:'இலைகளில் வெள்ளை தூள்',te:'ఆకులపై తెల్లని పొడి'},
+   sol:{en:'Baking soda 5g + water 1L + soap drops. Spray weekly.',hi:'बेकिंग सोडा 5g + पानी 1L स्प्रे करें।',kn:'ಬೇಕಿಂಗ್ ಸೋಡಾ 5g + ನೀರು 1L.',ta:'சோடா 5g + தண்ணீர் 1L.',te:'సోడా 5g + నీరు 1L.'},c:'#4a148c'},
+  {n:{en:'Yellow Leaves (Nutrient Deficiency)',hi:'पोषक तत्व की कमी',kn:'ಪೋಷಕಾಂಶ ಕೊರತೆ',ta:'ஊட்டச்சத்து குறைபாடு',te:'పోషక లోపం'},
+   s:{en:'Yellowing leaves, stunted growth, weak plant',hi:'पत्तियां पीली, धीमी वृद्धि',kn:'ಎಲೆಗಳು ಹಳದಿ, ನಿಧಾನ ಬೆಳವಣಿಗೆ',ta:'மஞ்சள் இலைகள், குறைந்த வளர்ச்சி',te:'పసుపు ఆకులు, నెమ్మదిగా పెరుగుదల'},
+   sol:{en:'Add vermicompost + cow dung slurry. Test soil pH. Ensure proper watering.',hi:'वर्मीकम्पोस्ट + गोमूत्र डालें। मिट्टी परीक्षण करें।',kn:'ವರ್ಮಿಕಂಪೋಸ್ಟ್ + ಸಗಣಿ ನೀರು ಹಾಕಿ.',ta:'மண்புழு உரம் + மாட்டு சாணம்.',te:'వర్మీకంపోస్ట్ + పశువుల ఎరువు.'},c:'#f57f17'},
+  {n:{en:'Root Rot',hi:'जड़ सड़न',kn:'ಬೇರು ಕೊಳೆತ',ta:'வேர் அழுகல்',te:'వేరు కుళ్ళు'},
+   s:{en:'Wilting despite watering, dark roots, foul smell from soil',hi:'पानी के बाद भी मुरझाना, काली जड़ें',kn:'ನೀರಿದ್ದರೂ ಬಾಡುತ್ತದೆ',ta:'நீரூற்றினாலும் வாடுதல்',te:'నీరు పోసినా వాడుతుంది'},
+   sol:{en:'Reduce irrigation. Add sand for drainage. Apply Trichoderma viride 2.5kg/acre.',hi:'सिंचाई कम करें, ट्राइकोडर्मा डालें।',kn:'ನೀರಾವರಿ ಕಡಿಮೆ ಮಾಡಿ. ಟ್ರೈಕೋಡರ್ಮಾ ಬಳಸಿ.',ta:'நீர்ப்பாசனம் குறைக்கவும். டிரைக்கோடெர்மா.',te:'నీటి తడి తగ్గించండి. ట్రైకోడెర్మా.'},c:'#1a237e'},
+  {n:{en:'Healthy Plant! ✅',hi:'स्वस्थ पौधा! ✅',kn:'ಆರೋಗ್ಯಕರ ಗಿಡ! ✅',ta:'ஆரோக்கியமான செடி! ✅',te:'ఆరోగ్యకరమైన మొక్క! ✅'},
+   s:{en:'Your plant looks healthy. Great farming!',hi:'आपका पौधा स्वस्थ है!',kn:'ನಿಮ್ಮ ಗಿಡ ಆರೋಗ್ಯಕರ!',ta:'செடி ஆரோக்கியமாக உள்ளது!',te:'మొక్క ఆరోగ్యంగా ఉంది!'},
+   sol:{en:'Continue: neem oil monthly, compost each season, crop rotation yearly.',hi:'नीम स्प्रे मासिक, कम्पोस्ट हर मौसम।',kn:'ತಿಂಗಳಿಗೊಮ್ಮೆ ಬೇವಿನ ಸ್ಪ್ರೇ.',ta:'மாதம் வேப்ப எண்ணெய்.',te:'నెలకు వేప నూనె.'},c:'#1b5e20'},
+];
+
+const WX={
+  en:[{i:'🌧️',t:'Heavy Rain Expected',tip:'Ensure drainage. Avoid sowing. Cover harvested crops.'},{i:'☀️',t:'Hot & Dry Weather',tip:'Water early morning or evening. Use mulching to retain moisture.'},{i:'🌤️',t:'Good Farming Weather',tip:'Ideal day for sowing, spraying, and harvesting!'},{i:'🌡️',t:'Cold Alert Tonight',tip:'Frost expected. Cover young plants with cloth or plastic.'}],
+  hi:[{i:'🌧️',t:'भारी बारिश',tip:'जल निकासी सुनिश्चित करें। आज बुवाई न करें।'},{i:'☀️',t:'गर्म मौसम',tip:'सुबह या शाम पानी दें। मल्चिंग करें।'},{i:'🌤️',t:'अच्छा मौसम',tip:'आज बुवाई, स्प्रे और कटाई के लिए उत्तम।'},{i:'🌡️',t:'ठंड चेतावनी',tip:'रात को पाला। पौधों को कपड़े से ढकें।'}],
+  kn:[{i:'🌧️',t:'ಭಾರೀ ಮಳೆ',tip:'ಚರಂಡಿ ಮಾಡಿ. ಇಂದು ಬಿತ್ತನೆ ಬೇಡ.'},{i:'☀️',t:'ಬಿಸಿ ಹವಾಮಾನ',tip:'ಬೆಳಿಗ್ಗೆ ಅಥವಾ ಸಂಜೆ ನೀರು ಹಾಕಿ.'},{i:'🌤️',t:'ಉತ್ತಮ ಹವಾಮಾನ',tip:'ಬಿತ್ತನೆ, ಸಿಂಪಡಿಸುವಿಕೆ ಮತ್ತು ಕೊಯ್ಲಿಗೆ ಸೂಕ್ತ.'},{i:'🌡️',t:'ಚಳಿ ಎಚ್ಚರಿಕೆ',tip:'ರಾತ್ರಿ ಚಳಿ. ಸಣ್ಣ ಗಿಡ ಮುಚ್ಚಿ.'}],
+  ta:[{i:'🌧️',t:'கனமழை',tip:'வடிகால் ஏற்பாடு. இன்று விதைக்க வேண்டாம்.'},{i:'☀️',t:'வெப்பமான வானிலை',tip:'காலை அல்லது மாலை நீர் பாய்ச்சுங்கள்.'},{i:'🌤️',t:'நல்ல வானிலை',tip:'விதைப்பு, தெளிப்பு, அறுவடைக்கு ஏற்றது.'},{i:'🌡️',t:'குளிர் எச்சரிக்கை',tip:'இரவில் குளிர். செடிகளை மூடுங்கள்.'}],
+  te:[{i:'🌧️',t:'భారీ వర్షం',tip:'మురుగు నీటి వ్యవస్థ. విత్తనాలు వేయకండి.'},{i:'☀️',t:'వేడి వాతావరణం',tip:'ఉదయం లేదా సాయంత్రం నీళ్ళు పోయండి.'},{i:'🌤️',t:'మంచి వాతావరణం',tip:'విత్తనాలు, పిచికారీ, కోతకు అనుకూలం.'},{i:'🌡️',t:'చల్లని హెచ్చరిక',tip:'రాత్రి చల్లగా ఉంటుంది. మొక్కలను కప్పండి.'}],
+};
+
+const T={
+  en:{AT:'🌾 Smart Farmer',M1:'Add Crop',M1s:'Tap plant image',M2:'My Records',M2s:'View history',M3:'Market Price',M3s:'MSP 2025-26',M4:'AI Predict',M4s:'Future profit',M5:'Plant Doctor',M5s:'Camera + Soil',M6:'Weather',M6s:'Farming tips',PT1:'Add Crop / Plant',VFT:'Speak to fill form',LC:'Select Plant (tap image)',LSS:'Select Season',LAC:'Land Area (Acres)',ART:'Auto Calculated for Your Farm',RL1:'Sowing Date',RL2:'Harvest Date',RL3:'Total Cost',RL4:'Expected Yield',RL5:'MSP / Market Price',RL6:'Expected Profit',SLT:'Soil Intelligence',QLT:'AI Quality Grade',FT:'Fertilizer Schedule (Natural)',SB:'✅ Save Record',PT2:'My Records',PT3:'Market Prices (MSP 2025-26)',PT4:'AI Predictions',PT5:'Plant Doctor + Soil Detector',PT6:'Weather Tips',back:'Back',noData:'No crops added yet.',profit:'Profit',loss:'Loss',totalProfit:'Total Profit',predYield:'Predicted Yield',predProfit:'Predicted Profit',bestCrop:'Best Crop',organic:'Organic',listening:'Listening... speak now',soilTitle:'Soil Needed for This Crop',qualTitle:'Expected Quality Grade',natSol:'Natural Solution (No Pesticides)',symptoms:'Symptoms',soilDetTitle:'Soil Type Detected',openCam:'Open Camera',soilType:'Soil Type',soilPh:'Ideal pH',soilColor:'Soil Colour',soilNotes:'Farming Notes',bestCropsLbl:'Best Crops for This Soil',gradeA:'Grade A — Best Quality',gradeB:'Grade B — Standard',gradeC:'Grade C — Low Quality',aiConf:'AI Confidence',mktPriceLbl:'Market Price (Auto)',welcome:'Welcome to Smart Farmer 2025. Select your crop and enter your land area. The app will automatically calculate everything for you.'},
+  hi:{AT:'🌾 किसान सहायक',M1:'फसल जोड़ें',M1s:'पौधे की तस्वीर',M2:'मेरे रिकॉर्ड',M2s:'इतिहास देखें',M3:'बाजार भाव',M3s:'MSP 2025-26',M4:'AI भविष्यवाणी',M4s:'भविष्य लाभ',M5:'पौधा डॉक्टर',M5s:'कैमरा + मिट्टी',M6:'मौसम',M6s:'खेती सुझाव',PT1:'फसल / पौधा जोड़ें',VFT:'बोलकर फॉर्म भरें',LC:'पौधा चुनें (चित्र दबाएं)',LSS:'मौसम चुनें',LAC:'भूमि (एकड़)',ART:'आपके खेत के लिए स्वतः गणना',RL1:'बुवाई तारीख',RL2:'कटाई तारीख',RL3:'कुल लागत',RL4:'अनुमानित उपज',RL5:'MSP / बाजार मूल्य',RL6:'अनुमानित लाभ',SLT:'मिट्टी की जानकारी',QLT:'AI गुणवत्ता ग्रेड',FT:'उर्वरक अनुसूची (प्राकृतिक)',SB:'✅ रिकॉर्ड सहेजें',PT2:'मेरे रिकॉर्ड',PT3:'बाजार भाव (MSP 2025-26)',PT4:'AI भविष्यवाणी',PT5:'पौधा डॉक्टर + मिट्टी पहचान',PT6:'मौसम सुझाव',back:'वापस',noData:'कोई फसल नहीं जोड़ी।',profit:'लाभ',loss:'हानि',totalProfit:'कुल लाभ',predYield:'अनुमानित उपज',predProfit:'अनुमानित लाभ',bestCrop:'सर्वोत्तम फसल',organic:'जैविक',listening:'सुन रहा है... बोलें',soilTitle:'इस फसल के लिए मिट्टी',qualTitle:'अनुमानित गुणवत्ता ग्रेड',natSol:'प्राकृतिक समाधान (कीटनाशक नहीं)',symptoms:'लक्षण',soilDetTitle:'मिट्टी का प्रकार',openCam:'कैमरा खोलें',soilType:'मिट्टी का प्रकार',soilPh:'आदर्श pH',soilColor:'मिट्टी का रंग',soilNotes:'खेती की जानकारी',bestCropsLbl:'इस मिट्टी के लिए सर्वोत्तम फसलें',gradeA:'ग्रेड A — सर्वोत्तम गुणवत्ता',gradeB:'ग्रेड B — सामान्य',gradeC:'ग्रेड C — निम्न गुणवत्ता',aiConf:'AI विश्वास',mktPriceLbl:'बाजार मूल्य (स्वचालित)',welcome:'स्मार्ट किसान सहायक में आपका स्वागत है। अपनी फसल चुनें और जमीन का क्षेत्र दर्ज करें। ऐप स्वतः सब कुछ गणना करेगा।'},
+  kn:{AT:'🌾 ರೈತ ಸಹಾಯಕ',M1:'ಬೆಳೆ ಸೇರಿಸಿ',M1s:'ಗಿಡದ ಚಿತ್ರ',M2:'ನನ್ನ ದಾಖಲೆ',M2s:'ಇತಿಹಾಸ',M3:'ಮಾರುಕಟ್ಟೆ',M3s:'MSP 2025-26',M4:'AI ಮುನ್ಸೂಚನೆ',M4s:'ಭವಿಷ್ಯ',M5:'ಸಸ್ಯ ವೈದ್ಯ',M5s:'ಕ್ಯಾಮೆರಾ + ಮಣ್ಣು',M6:'ಹವಾಮಾನ',M6s:'ಕೃಷಿ ಸಲಹೆ',PT1:'ಬೆಳೆ ಸೇರಿಸಿ',VFT:'ಮಾತಿನಿಂದ ತುಂಬಿ',LC:'ಬೆಳೆ ಆಯ್ಕೆ ಮಾಡಿ',LSS:'ಋತು ಆಯ್ಕೆ',LAC:'ಭೂಮಿ (ಎಕರೆ)',ART:'ನಿಮ್ಮ ತೋಟಕ್ಕೆ ಲೆಕ್ಕ',RL1:'ಬಿತ್ತನೆ ದಿನಾಂಕ',RL2:'ಕೊಯ್ಲು ದಿನಾಂಕ',RL3:'ಒಟ್ಟು ವೆಚ್ಚ',RL4:'ನಿರೀಕ್ಷಿತ ಇಳುವರಿ',RL5:'MSP / ಮಾರುಕಟ್ಟೆ ಬೆಲೆ',RL6:'ನಿರೀಕ್ಷಿತ ಲಾಭ',SLT:'ಮಣ್ಣಿನ ಮಾಹಿತಿ',QLT:'AI ಗುಣಮಟ್ಟ ಗ್ರೇಡ್',FT:'ಗೊಬ್ಬರ ವೇಳಾಪಟ್ಟಿ (ಪ್ರಾಕೃತಿಕ)',SB:'✅ ದಾಖಲೆ ಉಳಿಸಿ',PT2:'ನನ್ನ ದಾಖಲೆ',PT3:'ಮಾರುಕಟ್ಟೆ ಬೆಲೆ',PT4:'AI ಮುನ್ಸೂಚನೆ',PT5:'ಸಸ್ಯ ವೈದ್ಯ + ಮಣ್ಣು',PT6:'ಹವಾಮಾನ',back:'ಹಿಂದೆ',noData:'ಇನ್ನೂ ಬೆಳೆ ಸೇರಿಸಿಲ್ಲ.',profit:'ಲಾಭ',loss:'ನಷ್ಟ',totalProfit:'ಒಟ್ಟು ಲಾಭ',predYield:'ಅಂದಾಜು ಇಳುವರಿ',predProfit:'ಅಂದಾಜು ಲಾಭ',bestCrop:'ಅತ್ಯುತ್ತಮ ಬೆಳೆ',organic:'ಜೈವಿಕ',listening:'ಕೇಳುತ್ತಿದೆ... ಮಾತಾಡಿ',soilTitle:'ಈ ಬೆಳೆಗೆ ಮಣ್ಣು',qualTitle:'ಗುಣಮಟ್ಟ ಗ್ರೇಡ್',natSol:'ಪ್ರಾಕೃತಿಕ ಪರಿಹಾರ (ಕೀಟನಾಶಕ ಇಲ್ಲ)',symptoms:'ಲಕ್ಷಣಗಳು',soilDetTitle:'ಮಣ್ಣಿನ ವಿಧ',openCam:'ಕ್ಯಾಮೆರಾ ತೆರೆಯಿರಿ',soilType:'ಮಣ್ಣಿನ ಪ್ರಕಾರ',soilPh:'ಸೂಕ್ತ pH',soilColor:'ಮಣ್ಣಿನ ಬಣ್ಣ',soilNotes:'ಕೃಷಿ ಮಾಹಿತಿ',bestCropsLbl:'ಈ ಮಣ್ಣಿಗೆ ಸೂಕ್ತ ಬೆಳೆಗಳು',gradeA:'ಗ್ರೇಡ್ A — ಅತ್ಯುತ್ತಮ ಗುಣಮಟ್ಟ',gradeB:'ಗ್ರೇಡ್ B — ಸಾಮಾನ್ಯ',gradeC:'ಗ್ರೇಡ್ C — ಕಡಿಮೆ ಗುಣಮಟ್ಟ',aiConf:'AI ವಿಶ್ವಾಸ',mktPriceLbl:'ಮಾರುಕಟ್ಟೆ ಬೆಲೆ (ಸ್ವಯಂ)',welcome:'ರೈತ ಸಹಾಯಕಕ್ಕೆ ಸ್ವಾಗತ. ನಿಮ್ಮ ಬೆಳೆ ಆಯ್ಕೆ ಮಾಡಿ ಮತ್ತು ಎಕರೆ ನಮೂದಿಸಿ. ಅಪ್ಲಿಕೇಶನ್ ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಎಲ್ಲವನ್ನೂ ಲೆಕ್ಕ ಹಾಕುತ್ತದೆ.'},
+  ta:{AT:'🌾 விவசாயி',M1:'பயிர் சேர்',M1s:'செடி படம்',M2:'என் பதிவுகள்',M2s:'இதிகாசம்',M3:'சந்தை விலை',M3s:'MSP 2025-26',M4:'AI கணிப்பு',M4s:'எதிர்கால லாபம்',M5:'செடி மருத்துவர்',M5s:'கேமரா + மண்',M6:'வானிலை',M6s:'குறிப்புகள்',PT1:'பயிர் சேர்க்கவும்',VFT:'குரலில் நிரப்பவும்',LC:'பயிர் தேர்வு',LSS:'பருவம் தேர்வு',LAC:'நிலம் (ஏக்கர்)',ART:'உங்கள் நிலத்திற்கு கணக்கீடு',RL1:'விதைப்பு தேதி',RL2:'அறுவடை தேதி',RL3:'மொத்த செலவு',RL4:'எதிர்பார்த்த மகசூல்',RL5:'MSP / சந்தை விலை',RL6:'எதிர்பார்த்த லாபம்',SLT:'மண் தகவல்',QLT:'AI தர மதிப்பீடு',FT:'உர அட்டவணை (இயற்கை)',SB:'✅ பதிவு சேமி',PT2:'என் பதிவுகள்',PT3:'சந்தை விலைகள்',PT4:'AI கணிப்புகள்',PT5:'செடி மருத்துவர் + மண்',PT6:'வானிலை',back:'பின்னால்',noData:'பயிர் இல்லை.',profit:'லாபம்',loss:'நஷ்டம்',totalProfit:'மொத்த லாபம்',predYield:'மகசூல் கணிப்பு',predProfit:'லாப கணிப்பு',bestCrop:'சிறந்த பயிர்',organic:'இயற்கை',listening:'கேட்கிறது...',soilTitle:'இந்த பயிருக்கு மண்',qualTitle:'தர மதிப்பீடு',natSol:'இயற்கை தீர்வு (பூச்சிக்கொல்லி இல்லை)',symptoms:'அறிகுறிகள்',soilDetTitle:'மண் வகை',openCam:'கேமரா திற',soilType:'மண் வகை',soilPh:'சிறந்த pH',soilColor:'மண் நிறம்',soilNotes:'விவசாய குறிப்புகள்',bestCropsLbl:'இந்த மண்ணுக்கு சிறந்த பயிர்கள்',gradeA:'தரம் A — சிறந்த தரம்',gradeB:'தரம் B — சாதாரண',gradeC:'தரம் C — குறைந்த தரம்',aiConf:'AI நம்பிக்கை',mktPriceLbl:'சந்தை விலை (தானியங்கி)',welcome:'விவசாயி உதவியாளருக்கு வரவேற்கிறோம். உங்கள் பயிரை தேர்ந்தெடுத்து நிலத்தின் ஏக்கரை உள்ளிடவும். பயன்பாடு தானாகவே எல்லாவற்றையும் கணக்கிடும்.'},
+  te:{AT:'🌾 రైతు సహాయకుడు',M1:'పంట జోడించు',M1s:'మొక్క చిత్రం',M2:'నా రికార్డులు',M2s:'చరిత్ర',M3:'మార్కెట్',M3s:'MSP 2025-26',M4:'AI అంచనా',M4s:'భవిష్యత్',M5:'మొక్క వైద్యుడు',M5s:'కెమెరా + నేల',M6:'వాతావరణం',M6s:'చిట్కాలు',PT1:'పంట జోడించు',VFT:'మాట్లాడి నింపండి',LC:'పంట ఎంచుకోండి',LSS:'సీజన్',LAC:'భూమి (ఎకరాలు)',ART:'మీ పొలానికి లెక్క',RL1:'విత్తన తేదీ',RL2:'కోత తేదీ',RL3:'మొత్తం ఖర్చు',RL4:'అంచనా దిగుబడి',RL5:'MSP / మార్కెట్ ధర',RL6:'అంచనా లాభం',SLT:'నేల సమాచారం',QLT:'AI నాణ్యత గ్రేడ్',FT:'ఎరువు షెడ్యూల్ (సహజ)',SB:'✅ రికార్డు సేవ్',PT2:'నా రికార్డులు',PT3:'మార్కెట్ ధరలు',PT4:'AI అంచనాలు',PT5:'మొక్క వైద్యుడు + నేల',PT6:'వాతావరణం',back:'వెనుకకు',noData:'పంటలు లేవు.',profit:'లాభం',loss:'నష్టం',totalProfit:'మొత్తం లాభం',predYield:'అంచనా దిగుబడి',predProfit:'అంచనా లాభం',bestCrop:'అత్యుత్తమ పంట',organic:'సహజ',listening:'వింటున్నది...',soilTitle:'ఈ పంటకు నేల',qualTitle:'నాణ్యత గ్రేడ్',natSol:'సహజ పరిష్కారం (పురుగుమందు లేదు)',symptoms:'లక్షణాలు',soilDetTitle:'నేల రకం',openCam:'కెమెరా తెరవండి',soilType:'నేల రకం',soilPh:'సరైన pH',soilColor:'నేల రంగు',soilNotes:'వ్యవసాయ సమాచారం',bestCropsLbl:'ఈ నేలకు అనుకూలమైన పంటలు',gradeA:'గ్రేడ్ A — అత్యుత్తమ నాణ్యత',gradeB:'గ్రేడ్ B — సామాన్యమైన',gradeC:'గ్రేడ్ C — తక్కువ నాణ్యత',aiConf:'AI నమ్మకం',mktPriceLbl:'మార్కెట్ ధర (స్వయంచాలక)',welcome:'రైతు సహాయకుడికి స్వాగతం. మీ పంటను ఎంచుకుని ఎకరాలు నమోదు చేయండి. యాప్ స్వయంచాలకంగా అన్నీ లెక్కిస్తుంది.'},
+};
+
+// ════ STATE ════
+let lang='en', DB=JSON.parse(localStorage.getItem('sf25')||'[]');
+let sP=null,sS=null,acres=1,camStream=null,recog=null;
+const MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// ════ BOOT ════
+// Voice diagnostic — helps user know if Indian voices are installed
+function checkVoices(){
+  const vs=window.speechSynthesis.getVoices();
+  const has=l=>vs.some(v=>v.lang.startsWith(l));
+  const kn=has('kn'), hi=has('hi'), ta=has('ta'), te=has('te');
+  const msg=[];
+  if(kn) msg.push('ಕನ್ನಡ✅'); else msg.push('ಕನ್ನಡ❌');
+  if(hi) msg.push('हिंदी✅'); else msg.push('हिंदी❌');
+  if(ta) msg.push('தமிழ்✅'); else msg.push('தமிழ்❌');
+  if(te) msg.push('తెలుగు✅'); else msg.push('తెలుగు❌');
+  const st=document.getElementById('voiceStatus');
+  if(st) st.textContent=msg.join('  ');
+  if(!kn||!ta||!te){
+    const st2=document.getElementById('voiceStatus');
+    if(st2) st2.textContent+=' — Windows: Settings→Time & Language→Speech→Add voices';
+  }
+}
+// Auto-check voices on load
+window.addEventListener('load',()=>{
+  setTimeout(checkVoices,1500);
+});
+
+let ivrStopped=false;
+function boot(l){
+  lang=l;
+  ivrStopped=true;
+  try{_audio().pause();}catch(e){}
+  try{window.speechSynthesis&&window.speechSynthesis.cancel();}catch(e){}
+  document.getElementById('splash').style.display='none';
+  document.getElementById('app').style.display='block';
+  applyLang();buildCG('all');buildSG();
+  // Speak welcome in farmer's selected language
+  setTimeout(()=>{
+    speakSmart(WELCOME_MSG[l]||WELCOME_MSG.en, WELCOME_MSG.en, VOICE_LANG[l]||'en-IN', null);
+  }, 700);
+}
+function changeLang(){document.getElementById('splash').style.display='flex';document.getElementById('app').style.display='none';}
+function applyLang(){const L=T[lang];Object.keys(L).forEach(k=>{const e=document.getElementById(k);if(e)e.textContent=L[k];});document.querySelectorAll('.bk').forEach(e=>e.textContent=L.back);const cb=document.getElementById('cob');if(cb)cb.textContent=L.openCam;}
+
+
+
+// ════ IVR — bilingual: English number + native language ════
+// Each item spoken twice: English number (always works) + native text
+const IVR=[
+  {text:'Welcome to Smart Farmer. Please select your language.',
+   lang:'en-IN', display:'📞 Smart Farmer — ಭಾಷೆ ಆಯ್ಕೆ ಮಾಡಿ'},
+
+  {text:'Press one for Kannada. ಕನ್ನಡಕ್ಕಾಗಿ ಒಂದು ಒತ್ತಿರಿ.',
+   lang:'en-IN', display:'1️⃣  ಕನ್ನಡ — Press 1'},
+
+  {text:'Press two for Hindi. हिंदी के लिए दो दबाएं.',
+   lang:'en-IN', display:'2️⃣  हिन्दी — Press 2'},
+
+  {text:'Press three for Tamil. தமிழுக்கு மூன்று அழுத்தவும்.',
+   lang:'en-IN', display:'3️⃣  தமிழ் — Press 3'},
+
+  {text:'Press four for Telugu. తెలుగుకు నాలుగు నొక్కండి.',
+   lang:'en-IN', display:'4️⃣  తెలుగు — Press 4'},
+
+  {text:'Press five for English.',
+   lang:'en-IN', display:'5️⃣  English — Press 5'},
+];
+
+const WELCOME_MSG={
+  kn:'ರೈತ ಸಹಾಯಕಕ್ಕೆ ಸ್ವಾಗತ. ಬೆಳೆ ಸೇರಿಸಲು ಬೆಳೆ ಸೇರಿಸಿ ಒತ್ತಿರಿ. ಮಾರುಕಟ್ಟೆ ಬೆಲೆ ನೋಡಲು ಮಾರುಕಟ್ಟೆ ಒತ್ತಿರಿ. ಹವಾಮಾನ ನೋಡಲು ಹವಾಮಾನ ಒತ್ತಿರಿ.',
+  hi:'किसान सहायक में स्वागत है। फसल जोड़ने के लिए फसल जोड़ें दबाएं। बाजार भाव के लिए बाजार दबाएं। मौसम के लिए मौसम दबाएं।',
+  ta:'விவசாயி உதவியாளருக்கு வரவேற்கிறோம். பயிர் சேர்க்க பயிர் சேர் அழுத்தவும். சந்தை விலைக்கு சந்தை அழுத்தவும். வானிலைக்கு வானிலை அழுத்தவும்.',
+  te:'రైతు సహాయకుడికి స్వాగతం. పంట జోడించడానికి పంట జోడించు నొక్కండి. మార్కెట్ ధరకు మార్కెట్ నొక్కండి. వాతావరణానికి వాతావరణం నొక్కండి.',
+  en:'Welcome to Smart Farmer. Tap Add Crop to start. Tap Market for prices. Tap Weather for live weather.',
+};
+const VOICE_LANG={kn:'kn-IN',hi:'hi-IN',ta:'ta-IN',te:'te-IN',en:'en-IN'};
+
+// ════ AUTO IVR ON FIRST TOUCH ════
+// Browser requires one user gesture to unlock audio.
+// We listen for the very first tap/click anywhere on the splash screen.
+let ivrStarted=false;
+
+function unlockAndStart(){
+  if(ivrStarted) return;
+  ivrStarted=true;
+  document.getElementById('splash').removeEventListener('click', unlockAndStart);
+  document.getElementById('splash').removeEventListener('touchstart', unlockAndStart);
+  document.getElementById('vp').textContent='🔊 Loading voices...';
+  // Small silent utterance to unlock audio context
+  const silent=new SpeechSynthesisUtterance(' ');
+  silent.volume=0;
+  silent.onend=()=>setTimeout(runIVR, 400);
+  silent.onerror=()=>setTimeout(runIVR, 400);
+  window.speechSynthesis.speak(silent);
+}
+
+// Attach listeners to splash screen
+document.addEventListener('DOMContentLoaded',()=>{
+  const splash=document.getElementById('splash');
+  splash.addEventListener('click',    unlockAndStart);
+  splash.addEventListener('touchstart', unlockAndStart);
+});
+
+function startApp(){ unlockAndStart(); }
+function replayIVR(){ ivrStarted=false; unlockAndStart(); }
+function autoStartIVR(){ unlockAndStart(); }
+
+function runIVR(){
+  const vp=document.getElementById('vp');
+  vp.textContent='';
+  ivrStopped=false;
+  let i=0;
+  function next(){
+    if(ivrStopped) return;
+    if(i>=IVR.length){
+      vp.textContent='🎤  1-ಕನ್ನಡ  2-हिंदी  3-தமிழ்  4-తెలుగు  5-English';
+      if(!ivrStopped) startListening();
+      return;
+    }
+    const item=IVR[i++];
+    if(ivrStopped) return;
+    vp.textContent='🔊 '+item.display;
+    speakInLang(item.text, item.lang, ()=>{ if(!ivrStopped) setTimeout(next,800); });
+  }
+  next();
+}
+
+// ════ TTS ENGINE — Browser SpeechSynthesis ════
+// Works on ALL devices via Live Server
+// Sets correct lang code so Chrome uses built-in neural voices
+
+const VOICE_MAP={
+  'kn-IN': ['kn-IN','kn'],
+  'hi-IN': ['hi-IN','hi'],
+  'ta-IN': ['ta-IN','ta'],
+  'te-IN': ['te-IN','te'],
+  'en-IN': ['en-IN','en-US','en-GB','en'],
+};
+
+let _currentUtterance=null;
+
+function _stopAll(){
+  try{
+    if(window.speechSynthesis){
+      window.speechSynthesis.cancel();
+    }
+    _currentUtterance=null;
+  }catch(e){}
+}
+
+// ════ TTS ENGINE — FIXED ════
+// Voices cached at startup so _hasVoice() is always accurate
+
+let _cachedVoices=[];
+let _voicesReady=false;
+
+function _loadVoices(){
+  const vs=window.speechSynthesis.getVoices();
+  if(vs&&vs.length>0){_cachedVoices=vs;_voicesReady=true;}
+}
+
+if(window.speechSynthesis){
+  _loadVoices();
+  window.speechSynthesis.onvoiceschanged=()=>_loadVoices();
+}
+
+function _getBestVoice(vlang){
+  if(!_voicesReady)_loadVoices();
+  const px=vlang.split('-')[0];
+  return _cachedVoices.find(v=>v.lang===vlang)
+    ||_cachedVoices.find(v=>v.lang.startsWith(px))
+    ||null;
+}
+
+function _getEnVoice(){
+  if(!_voicesReady)_loadVoices();
+  return _cachedVoices.find(v=>v.lang==='en-IN')
+    ||_cachedVoices.find(v=>v.lang==='en-US')
+    ||_cachedVoices.find(v=>v.lang.startsWith('en'))
+    ||_cachedVoices[0]||null;
+}
+
+// speakSmart — uses native voice+text if available, else English
+function speakSmart(nativeText,engText,vlang,onEnd){
+  if(!window.speechSynthesis){if(onEnd)onEnd();return;}
+  window.speechSynthesis.cancel();
+  const go=()=>{
+    const nv=_getBestVoice(vlang);
+    const text=nv?nativeText:engText;
+    const voice=nv||_getEnVoice();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang=voice?voice.lang:(nv?vlang:'en-IN');
+    u.rate=0.85;u.pitch=1;u.volume=1;
+    if(voice)u.voice=voice;
+    if(onEnd){u.onend=()=>onEnd();u.onerror=()=>setTimeout(onEnd,150);}
+    window.speechSynthesis.speak(u);
+  };
+  _voicesReady?setTimeout(go,80):(window.speechSynthesis.onvoiceschanged=()=>{_loadVoices();window.speechSynthesis.onvoiceschanged=()=>_loadVoices();setTimeout(go,80);});
+}
+
+// speakInLang — always speaks with best available voice for given lang
+function speakInLang(text,vlang,onEnd){
+  if(!text){if(onEnd)onEnd();return;}
+  if(!window.speechSynthesis){if(onEnd)onEnd();return;}
+  window.speechSynthesis.cancel();
+  const go=()=>{
+    const voice=_getBestVoice(vlang)||_getEnVoice();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang=voice?voice.lang:vlang;
+    u.rate=0.85;u.pitch=1;u.volume=1;
+    if(voice)u.voice=voice;
+    if(onEnd){u.onend=()=>onEnd();u.onerror=()=>setTimeout(onEnd,150);}
+    window.speechSynthesis.speak(u);
+  };
+  _voicesReady?setTimeout(go,80):(window.speechSynthesis.onvoiceschanged=()=>{_loadVoices();window.speechSynthesis.onvoiceschanged=()=>_loadVoices();setTimeout(go,80);});
+}
+
+function startListening(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){
+    document.getElementById('vp').textContent='Please tap a language card below';
+    return;
+  }
+  const r=new SR();
+  r.lang='en-IN';
+  r.onresult=e=>{
+    const s=e.results[0][0].transcript.toLowerCase();
+    if(s.includes('kannada')||s.includes('one')||s.includes('1'))      boot('kn');
+    else if(s.includes('hindi')||s.includes('two')||s.includes('2'))   boot('hi');
+    else if(s.includes('tamil')||s.includes('three')||s.includes('3')) boot('ta');
+    else if(s.includes('telugu')||s.includes('four')||s.includes('4')) boot('te');
+    else if(s.includes('english')||s.includes('five')||s.includes('5'))boot('en');
+    else{ document.getElementById('vp').textContent='❓ Not heard. Tap a language below or tap 🔊 to retry.'; }
+  };
+  r.onerror=()=>{ document.getElementById('vp').textContent='Tap a language card below'; };
+  r.start();
+}
+
+// Panel voice guidance — spoken in farmer's language when each screen opens
+const PANEL_VOICE={
+  add:{
+    kn:'ಬೆಳೆ ಸೇರಿಸಿ ತೆರೆದಿದೆ. ಯಾವುದಾದರೂ ಗಿಡದ ಚಿತ್ರ ಒತ್ತಿ ಆಯ್ಕೆ ಮಾಡಿ. ನಂತರ ಋತು ಆಯ್ಕೆ ಮಾಡಿ. ನಿಮ್ಮ ಎಕರೆ ಸಂಖ್ಯೆ ನಮೂದಿಸಿ. ಆ್ಯಪ್ ವೆಚ್ಚ, ಇಳುವರಿ, ಲಾಭ ಮತ್ತು ನೀರಿನ ಅಗತ್ಯ ತೋರಿಸುತ್ತದೆ.',
+    hi:'फसल जोड़ें खुला है। कोई भी पौधे की तस्वीर दबाकर चुनें। फिर मौसम चुनें। अपने एकड़ की संख्या डालें। ऐप लागत, उपज, लाभ और पानी की जरूरत दिखाएगा।',
+    ta:'பயிர் சேர்க்கவும் திரை திறந்தது. எந்த செடியின் படத்தையும் தட்டி தேர்வு செய்யுங்கள். பருவம் தேர்ந்தெடுங்கள். ஏக்கர் எண்ணிக்கை உள்ளிடுங்கள். செலவு, மகசூல், லாபம் மற்றும் நீர் தேவை காட்டப்படும்.',
+    te:'పంట జోడించు తెర తెరిచింది. ఏదైనా మొక్క చిత్రాన్ని నొక్కి ఎంచుకోండి. సీజన్ ఎంచుకోండి. ఎకరాల సంఖ్య నమోదు చేయండి. యాప్ ఖర్చు, దిగుబడి, లాభం మరియు నీటి అవసరం చూపిస్తుంది.',
+    en:'Add Crop is open. Tap any plant photo to select it. Then choose the season. Enter your land area in acres. The app will show cost, yield, profit and water needs.',
+  },
+  crops:{
+    kn:'ನನ್ನ ದಾಖಲೆ ತೆರೆದಿದೆ. ನೀವು ಉಳಿಸಿದ ಎಲ್ಲಾ ಬೆಳೆಗಳು ಇಲ್ಲಿ ಕಾಣಿಸುತ್ತವೆ. ಕೆಳಗೆ ಒಟ್ಟು ಲಾಭ ತೋರಿಸಲಾಗಿದೆ.',
+    hi:'मेरे रिकॉर्ड खुले हैं। आपकी सभी सहेजी गई फसलें यहां दिखती हैं। नीचे कुल लाभ दिखाया गया है।',
+    ta:'என் பதிவுகள் திறந்தது. நீங்கள் சேமித்த அனைத்து பயிர்களும் இங்கே தெரிகின்றன. கீழே மொத்த லாபம் காட்டப்படுகிறது.',
+    te:'నా రికార్డులు తెరిచింది. మీరు సేవ్ చేసిన అన్ని పంటలు ఇక్కడ కనిపిస్తాయి. దిగువన మొత్తం లాభం చూపబడుతుంది.',
+    en:'My Records is open. All your saved crops are shown here. Total profit is shown at the bottom.',
+  },
+  market:{
+    kn:'ಮಾರುಕಟ್ಟೆ ಬೆಲೆ ತೆರೆದಿದೆ. ಎಲ್ಲಾ ಬೆಳೆಗಳ ಸರ್ಕಾರಿ ಕನಿಷ್ಠ ಬೆಂಬಲ ಬೆಲೆ ಇಲ್ಲಿ ನೋಡಿ. ಇದು ಸರ್ಕಾರ ನಿಗದಿಪಡಿಸಿದ ಖಾತರಿ ಬೆಲೆ.',
+    hi:'बाजार भाव खुला है। सभी फसलों के सरकारी न्यूनतम समर्थन मूल्य यहां देखें। यह सरकार द्वारा तय गारंटी मूल्य है।',
+    ta:'சந்தை விலை திறந்தது. அனைத்து பயிர்களுக்கும் அரசாங்க குறைந்தபட்ச ஆதார விலை இங்கே பார்க்கவும். இது அரசு நிர்ணயித்த உறுதி விலை.',
+    te:'మార్కెట్ ధర తెరిచింది. అన్ని పంటలకు ప్రభుత్వ కనీస మద్దతు ధర ఇక్కడ చూడండి. ఇది ప్రభుత్వం నిర్ణయించిన హామీ ధర.',
+    en:'Market Price is open. See government minimum support prices for all crops here. This is the guaranteed price set by the government.',
+  },
+  ai:{
+    kn:'AI ಮುನ್ಸೂಚನೆ ತೆರೆದಿದೆ. ನಿಮ್ಮ ಹಿಂದಿನ ಕೃಷಿ ದಾಖಲೆ ಆಧಾರದ ಮೇಲೆ ಅತ್ಯುತ್ತಮ ಬೆಳೆ ಮತ್ತು ನಿರೀಕ್ಷಿತ ಲಾಭ ತೋರಿಸಲಾಗಿದೆ.',
+    hi:'AI भविष्यवाणी खुली है। आपके पिछले खेती रिकॉर्ड के आधार पर सर्वोत्तम फसल और अनुमानित लाभ दिखाया गया है।',
+    ta:'AI கணிப்பு திறந்தது. உங்கள் கடந்தகால விவசாய பதிவுகளின் படி சிறந்த பயிர் மற்றும் எதிர்பார்த்த லாபம் காட்டப்படுகிறது.',
+    te:'AI అంచనా తెరిచింది. మీ గత వ్యవసాయ రికార్డుల ఆధారంగా అత్యుత్తమ పంట మరియు అంచనా లాభం చూపబడుతుంది.',
+    en:'AI Prediction is open. Your best crop and expected profit based on past farming records are shown here.',
+  },
+  camera:{
+    kn:'ಸಸ್ಯ ವೈದ್ಯ ತೆರೆದಿದೆ. ಮೊದಲು ಕ್ಯಾಮೆರಾ ತೆರೆಯಿರಿ. ರೋಗ ಪತ್ತೆ ಒತ್ತಿ ಗಿಡದ ರೋಗ ತಿಳಿಯಿರಿ. ಮಣ್ಣು ಪತ್ತೆ ಒತ್ತಿ ಮಣ್ಣಿನ ವಿಧ ತಿಳಿಯಿರಿ.',
+    hi:'पौधा डॉक्टर खुला है। पहले कैमरा खोलें। रोग पहचानें बटन से पौधे की बीमारी जानें। मिट्टी पहचानें बटन से मिट्टी का प्रकार जानें।',
+    ta:'செடி மருத்துவர் திறந்தது. முதலில் கேமரா திறக்கவும். நோய் கண்டறி பொத்தானை அழுத்தி செடி நோயை தெரிந்துகொள்ளுங்கள். மண் கண்டறி அழுத்தி மண் வகை அறியுங்கள்.',
+    te:'మొక్క వైద్యుడు తెరిచింది. ముందు కెమెరా తెరవండి. వ్యాధి గుర్తించు నొక్కి మొక్క వ్యాధి తెలుసుకోండి. నేల గుర్తించు నొక్కి నేల రకం తెలుసుకోండి.',
+    en:'Plant Doctor is open. First open the camera. Tap Diagnose Plant to detect disease. Tap Detect Soil to know your soil type.',
+  },
+  weather:{
+    kn:'ಹವಾಮಾನ ತೆರೆದಿದೆ. ನಿಮ್ಮ ಇಂದಿನ ಹವಾಮಾನ ಲೋಡ್ ಆಗುತ್ತಿದೆ. ತಾಪಮಾನ, ಮಳೆ ಮತ್ತು ಕೃಷಿ ಸಲಹೆ ನೋಡಿ.',
+    hi:'मौसम खुला है। आज का लाइव मौसम लोड हो रहा है। तापमान, बारिश और खेती की सलाह देखें।',
+    ta:'வானிலை திறந்தது. இன்றைய நேரடி வானிலை ஏற்றப்படுகிறது. வெப்பநிலை, மழை மற்றும் விவசாய ஆலோசனை பாருங்கள்.',
+    te:'వాతావరణం తెరిచింది. ఈరోజు లైవ్ వాతావరణం లోడ్ అవుతుంది. ఉష్ణోగ్రత, వర్షం మరియు వ్యవసాయ సలహా చూడండి.',
+    en:'Weather is open. Loading live weather for today. See temperature, rainfall and farming advice.',
+  },
+};
+
+// ════ PANELS ════
+function showPanel(n){
+  document.getElementById('mainMenu').style.display='none';
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+n).classList.add('active');
+  if(n==='crops')renderCrops();
+  if(n==='market')renderMkt();
+  if(n==='ai')renderAI();
+  if(n==='weather')renderWx();
+  if(n==='camera')resetCam();
+  // Speak screen guidance in farmer's selected language
+  const g=PANEL_VOICE[n];
+  if(g) setTimeout(()=>speakSmart(g[lang]||g.en, g.en, VOICE_LANG[lang]||'en-IN', null), 400);
+}
+function goBack(){document.getElementById('mainMenu').style.display='block';document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));stopCam();}
+
+// ════ CROP GRID ════
+function fcat(cat,el){document.querySelectorAll('.ctab').forEach(t=>t.classList.remove('a'));el.classList.add('a');buildCG(cat);}
+function buildCG(cat){const list=cat==='all'?PLANTS:PLANTS.filter(p=>p.cat===cat);document.getElementById('cropGrid').innerHTML=list.map(p=>`<div class="cc" id="cc_${p.id}" onclick="pickP('${p.id}')"><span class="ce">${p.e}</span><div class="cn">${p[lang]||p.en}</div><div class="cl">${p.en}</div></div>`).join('');}
+function pickP(id){sP=PLANTS.find(p=>p.id===id);document.querySelectorAll('.cc').forEach(c=>c.classList.remove('sel'));const el=document.getElementById('cc_'+id);if(el)el.classList.add('sel');speakSmart(sP[lang]||sP.en, sP.en, VOICE_LANG[lang]||'en-IN', null);calc();}
+
+// ════ SEASON ════
+function buildSG(){document.getElementById('seasonGrid').innerHTML=SEASONS.map(s=>`<div class="sc" id="sc_${s.id}" onclick="pickS('${s.id}')"><span class="si">${s.e}</span><div class="sn">${s[lang]||s.en}</div><div class="sd">${s.m}</div></div>`).join('');}
+function pickS(id){sS=SEASONS.find(s=>s.id===id);document.querySelectorAll('.sc').forEach(s=>s.classList.remove('sel'));document.getElementById('sc_'+id).classList.add('sel');speakSmart(sS[lang]||sS.en, sS.en, VOICE_LANG[lang]||'en-IN', null);}
+function chAc(d){acres=Math.max(0.5,+(document.getElementById('inAc').value||1)+d);document.getElementById('inAc').value=acres;calc();}
+
+// ════ AUTO CALCULATE ════
+function calc(){
+  acres=+(document.getElementById('inAc').value)||1;
+  if(!sP)return;
+  document.getElementById('autoR').style.display='block';
+  const p=sP;
+  // Dates
+  const now=new Date(),sowM=p.sow[0]-1;
+  let sowY=now.getFullYear();if(sowM<now.getMonth())sowY++;
+  const sDate=new Date(sowY,sowM,1);
+  const hDate=new Date(sDate.getTime()+p.days*864e5);
+  document.getElementById('RV1').textContent=MN[sDate.getMonth()]+' '+sDate.getFullYear();
+  document.getElementById('RV2').textContent=MN[hDate.getMonth()]+' '+hDate.getFullYear();
+  // Cost & yield (2025-26 correct values)
+  const tCost=Math.round(p.costAc*acres);
+  const tYield=Math.round(p.yldAc*acres);
+  const mktPr=p.mktAvg;
+  const mspDisp=p.mspPQ?`MSP Rs.${p.mspPQ}/qtl | Mkt Rs.${mktPr}/kg`:`Market Rs.${mktPr}/kg`;
+  const expRev=Math.round(tYield*mktPr);
+  const expProfit=expRev-tCost;
+  document.getElementById('RV3').textContent='Rs.'+tCost.toLocaleString('en-IN');
+  document.getElementById('RS3').textContent='Rs.'+p.costAc.toLocaleString('en-IN')+'/acre × '+acres;
+  document.getElementById('RV4').textContent=tYield.toLocaleString('en-IN')+' kg';
+  document.getElementById('RV5').textContent=mspDisp;
+  document.getElementById('RV6').textContent='Rs.'+expProfit.toLocaleString('en-IN');
+  document.getElementById('RV6').style.color=expProfit>=0?'#7b1fa2':'#c62828';
+  // Soil
+  renderSoil(p);
+  // Quality
+  renderQuality(p,acres);
+  // Fertilizer
+  renderFert(p,acres);
+  // Water requirements
+  document.getElementById('waterCard').innerHTML=getWaterCard(p.id,acres);
+  // Speak crop info in selected language — crop name in native script + figures
+  const _wd=typeof WATER_DB!=='undefined'?WATER_DB[p.id]:null;
+  const _wl=_wd?Math.round(_wd.lpd*acres):0;
+  const cropName=p[lang]||p.en; // native language crop name
+  const CMSG={
+    kn:`${cropName}. ${acres} ಎಕರೆ. ಒಟ್ಟು ವೆಚ್ಚ ${tCost.toLocaleString()} ರೂಪಾಯಿ. ಇಳುವರಿ ${tYield.toLocaleString()} ಕಿಲೋ. ಲಾಭ ${expProfit.toLocaleString()} ರೂಪಾಯಿ.`+(_wd?` ಪ್ರತಿದಿನ ${_wl.toLocaleString()} ಲೀಟರ್ ನೀರು ಬೇಕು.`:''),
+    hi:`${cropName}. ${acres} एकड़. कुल लागत ${tCost.toLocaleString()} रुपए. उपज ${tYield.toLocaleString()} किलो. लाभ ${expProfit.toLocaleString()} रुपए.`+(_wd?` प्रतिदिन ${_wl.toLocaleString()} लीटर पानी चाहिए.`:''),
+    ta:`${cropName}. ${acres} ஏக்கர். மொத்த செலவு ${tCost.toLocaleString()} ரூபாய். மகசூல் ${tYield.toLocaleString()} கிலோ. லாபம் ${expProfit.toLocaleString()} ரூபாய்.`+(_wd?` தினமும் ${_wl.toLocaleString()} லிட்டர் நீர் தேவை.`:''),
+    te:`${cropName}. ${acres} ఎకరాలు. మొత్తం ఖర్చు ${tCost.toLocaleString()} రూపాయలు. దిగుబడి ${tYield.toLocaleString()} కిలోలు. లాభం ${expProfit.toLocaleString()} రూపాయలు.`+(_wd?` రోజుకు ${_wl.toLocaleString()} లీటర్లు నీరు అవసరం.`:''),
+    en:`${cropName}. ${acres} acres. Total cost Rs.${tCost.toLocaleString()}. Yield ${tYield.toLocaleString()} kg. Profit Rs.${expProfit.toLocaleString()}.`+(_wd?` Water needed ${_wl.toLocaleString()} litres per day.`:''),
+  };
+  speakSmart(CMSG[lang]||CMSG.en, CMSG.en, VOICE_LANG[lang]||'en-IN', null);
+}
+
+// ════ SOIL RENDER ════
+function renderSoil(p){
+  const L=T[lang];
+  const s=p.soil;
+  const qmap={good:'sb-good',medium:'sb-med',poor:'sb-poor'};
+  const qlab={good:'✅ Good Match',medium:'⚠️ Medium Match',poor:'❌ Poor Match'};
+  document.getElementById('soilCard').innerHTML=`
+    <div class="soil-title">🪱 ${L.soilTitle}</div>
+    <div class="soil-row"><span class="soil-ico">🌍</span><div><div class="soil-key">${L.soilType}</div><div class="soil-val">${s.type}</div></div></div>
+    <div class="soil-row"><span class="soil-ico">🧪</span><div><div class="soil-key">${L.soilPh}</div><div class="soil-val">${s.ph}</div></div></div>
+    <div class="soil-row"><span class="soil-ico" style="background:${s.color};width:22px;height:22px;border-radius:50%;display:inline-block;flex-shrink:0;"></span><div><div class="soil-key">${L.soilColor}</div><div class="soil-val">${s.color}</div></div></div>
+    <div class="soil-row"><span class="soil-ico">📝</span><div><div class="soil-key">${L.soilNotes}</div><div class="soil-val">${s.notes}</div></div></div>
+    <span class="soil-badge ${qmap[s.quality]||'sb-good'}">${qlab[s.quality]||'✅ Good Match'}</span>`;
+}
+
+// ════ QUALITY GRADING ════
+function renderQuality(p,ac){
+  const L=T[lang];
+  const g=p.grades;
+  document.getElementById('qualCard').innerHTML=`
+    <div class="qual-title">🏅 ${L.qualTitle}</div>
+    <div class="grade-row"><div class="grade-badge gA">A</div><div class="grade-info"><div class="grade-name">${L.gradeA}</div><div class="grade-price">Rs.${g.A.price}/kg → Rs.${Math.round(p.yldAc*ac*g.A.price).toLocaleString('en-IN')}</div><div class="grade-tip">${g.A.tip}</div></div></div>
+    <div class="grade-row"><div class="grade-badge gB">B</div><div class="grade-info"><div class="grade-name">${L.gradeB}</div><div class="grade-price">Rs.${g.B.price}/kg → Rs.${Math.round(p.yldAc*ac*g.B.price).toLocaleString('en-IN')}</div><div class="grade-tip">${g.B.tip}</div></div></div>
+    <div class="grade-row"><div class="grade-badge gC">C</div><div class="grade-info"><div class="grade-name">${L.gradeC}</div><div class="grade-price">Rs.${g.C.price}/kg → Rs.${Math.round(p.yldAc*ac*g.C.price).toLocaleString('en-IN')}</div><div class="grade-tip">${g.C.tip}</div></div></div>`;
+}
+
+// ════ FERTILIZER ════
+function renderFert(p,ac){
+  const L=T[lang];
+  document.getElementById('fertList').innerHTML=p.fert.map(st=>`
+    <div class="fcard"><div class="fwk">${translateWeek(st.wk)}</div>
+    ${st.items.map(it=>{
+      const qsc=scQ(it.q,ac);
+      return `<div class="fitem"><span class="fico">${it.i}</span><div><div class="fn">${fertName(it.n)}</div><div class="fq">${qsc}</div><div class="ft">${it.t}</div>${it.org?`<span class="obadge">🌿 ${L.organic}</span>`:''}</div></div>`;
+    }).join('')}</div>`).join('');
+}
+
+function scQ(q,ac){
+  const m=q.match(/^([\d.]+)\s*(kg|tonne|T|bag|g)\/acre/i);
+  if(m){const v=parseFloat(m[1])*ac;return (Number.isInteger(v)?v:v.toFixed(1))+' '+m[2]+' total';}
+  const m2=q.match(/^([\d.]+)\s*(kg|tonne|T|bag|g)\s*per acre/i);
+  if(m2){const v=parseFloat(m2[1])*ac;return (Number.isInteger(v)?v:v.toFixed(1))+' '+m2[2]+' total';}
+  return q;
+}
+
+// ════ SAVE ════
+function saveCrop(){
+  if(!sP){alert('Please select a plant first!');return;}
+  const ac=+(document.getElementById('inAc').value)||1;
+  const sp = sP.mktAvg;
+  const tCost=Math.round(sP.costAc*ac);
+  const tYield=Math.round(sP.yldAc*ac);
+  const rev=Math.round(tYield*sp);
+  const prof=rev-tCost;
+  const rec={id:sP.id,e:sP.e,name:sP[lang]||sP.en,season:sS?(sS[lang]||sS.en):'',acres:ac,yield:tYield,cost:tCost,price:sp,revenue:rev,profit:prof,date:new Date().toLocaleDateString(),soil:sP.soil.type,grade:'A'};
+  DB.push(rec);localStorage.setItem('sf25',JSON.stringify(DB));
+  speak(`${rec.name}. ${T[lang].profit} Rs.${prof}`);
+  alert(`✅ Saved!\n${T[lang].RL6}: Rs.${prof.toLocaleString('en-IN')}`);
+  goBack();
+}
+
+// ════ RENDER CROPS ════
+function renderCrops(){
+  const L=T[lang],div=document.getElementById('cropList');
+  if(!DB.length){div.innerHTML=`<p style="text-align:center;color:var(--mut);padding:28px">${L.noData}</p>`;document.getElementById('totalBar').innerHTML='';return;}
+  let tot=0;
+  div.innerHTML=DB.map((c,i)=>{tot+=c.profit;const pos=c.profit>=0;return `<div class="crec"><div class="crt"><span class="cri">${c.e}</span><div><div class="crn">${c.name}</div><div class="crse">${c.season} • ${c.acres} acres • ${c.soil}</div></div></div><div class="crgrid"><div class="cri2"><div class="crl">${L.RL4}</div><div class="crv">${c.yield.toLocaleString()} kg</div></div><div class="cri2"><div class="crl">${L.RL5}</div><div class="crv">Rs.${c.price}/kg</div></div><div class="cri2"><div class="crl">${L.RL3}</div><div class="crv">Rs.${c.cost.toLocaleString()}</div></div><div class="cri2"><div class="crl">${L.mktPriceLbl}</div><div class="crv">Rs.${c.price}/kg ✅</div></div></div><div class="crp ${pos?'':'loss'}">${pos?'📈 '+L.profit:'📉 '+L.loss}: Rs.${Math.abs(c.profit).toLocaleString('en-IN')}</div><button class="dbtn" onclick="delR(${i})">🗑 Delete</button></div>`;}).join('');
+  document.getElementById('totalBar').innerHTML=`<div class="tbar">${L.totalProfit}: Rs.${Math.abs(tot).toLocaleString('en-IN')} ${tot>=0?'📈':'📉'}</div>`;
+  speak(L.totalProfit+' Rs.'+Math.abs(tot).toLocaleString());
+}
+function delR(i){DB.splice(i,1);localStorage.setItem('sf25',JSON.stringify(DB));renderCrops();}
+
+// ════ MARKET ════
+function renderMkt(){
+  document.getElementById('mktDate').textContent='📅 '+new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('priceList').innerHTML=PLANTS.filter(p=>p.mktAvg>0).map(p=>`
+    <div class="pcard"><span class="pi">${p.e}</span><div class="pinfo"><div class="pn">${p[lang]||p.en}</div><div class="pr">Min Rs.${p.mktMin} — Max Rs.${p.mktMax}/kg</div>${p.mspPQ?`<span class="msp-badge">MSP Rs.${p.mspPQ}/qtl 2025-26</span>`:''}</div><div class="pa">Rs.${p.mktAvg}</div></div>`).join('');
+}
+
+// ════ AI ════
+function renderAI(){
+  const L=T[lang],div=document.getElementById('aiOut');
+  if(!DB.length){div.innerHTML=`<p style="text-align:center;color:var(--mut);padding:28px">${L.noData}</p>`;return;}
+  const avgY=Math.round(DB.reduce((s,c)=>s+c.yield,0)/DB.length);
+  const avgP=Math.round(DB.reduce((s,c)=>s+c.profit,0)/DB.length);
+  const best=DB.reduce((a,b)=>a.profit>b.profit?a:b);
+  const pr=Math.round(DB.filter(c=>c.profit>0).length/DB.length*100);
+  div.innerHTML=`
+    <div class="acard"><div class="al">📊 ${L.predYield}</div><div class="av">${avgY.toLocaleString()} kg</div><div class="as">Average of ${DB.length} crops</div></div>
+    <div class="acard"><div class="al">💰 ${L.predProfit}</div><div class="av">Rs.${avgP.toLocaleString()}</div><div class="as">Average profit per crop</div></div>
+    <div class="acard"><div class="al">🌱 ${L.bestCrop}</div><div class="av">${best.e} ${best.name}</div><div class="as">${L.profit}: Rs.${best.profit.toLocaleString()}</div></div>
+    <div class="acard"><div class="al">📈 Profit Rate</div><div class="av">${pr}%</div><div class="as">Crops in profit</div></div>`;
+  speak(L.bestCrop+': '+best.name+'. '+L.predProfit+' Rs.'+avgP);
+}
+
+// ════ CAMERA ════
+function resetCam(){document.getElementById('camOv').style.display='flex';document.getElementById('capBtn').style.display='none';document.getElementById('soilBtn').style.display='none';document.getElementById('disOut').innerHTML='';}
+async function startCam(){
+  try{camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});document.getElementById('camV').srcObject=camStream;document.getElementById('camOv').style.display='none';document.getElementById('capBtn').style.display='block';document.getElementById('soilBtn').style.display='block';}
+  catch(e){document.getElementById('camOv').innerHTML='<div style="color:#fff;text-align:center;padding:20px;font-size:13px;">Camera unavailable.<br>Tap buttons to simulate AI.</div>';document.getElementById('capBtn').style.display='block';document.getElementById('soilBtn').style.display='block';}
+}
+function diagPlant(){
+  stopCam();document.getElementById('capBtn').style.display='none';document.getElementById('soilBtn').style.display='none';
+  const L=T[lang];
+  // Randomly detect either growth stage or disease for demo
+  const showGrowth=Math.random()>0.4;
+  if(showGrowth){
+    const g=GROWTH_STAGES[Math.floor(Math.random()*GROWTH_STAGES.length)];
+    const conf=(78+Math.random()*18).toFixed(0);
+    document.getElementById('disOut').innerHTML=`
+      <div class="dcard" style="border-left:4px solid ${g.color}">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="font-size:32px;">${g.icon}</span>
+          <div>
+            <div class="dn" style="color:${g.color}">${g.stage[lang]||g.stage.en}</div>
+            <div style="font-size:11px;color:var(--mut);">${L.aiConf}: ${conf}%</div>
+          </div>
+        </div>
+        <div style="font-size:13px;color:var(--txt);margin-bottom:10px;">${g.desc[lang]||g.desc.en}</div>
+        <div class="dsol">
+          <div class="dst">💡 ${lang==='hi'?'देखभाल सुझाव':lang==='kn'?'ಆರೈಕೆ ಸಲಹೆ':lang==='ta'?'பராமரிப்பு குறிப்பு':lang==='te'?'సంరక్షణ సూచన':'Care Tip'}:</div>
+          <div class="dsb">${g.tip[lang]||g.tip.en}</div>
+        </div>
+      </div>`;
+    speak((g.stage[lang]||g.stage.en)+'. '+(g.tip[lang]||g.tip.en));
+  } else {
+    const d=DISEASES[Math.floor(Math.random()*DISEASES.length)];
+    const conf=(75+Math.random()*20).toFixed(0);
+    document.getElementById('disOut').innerHTML=`
+      <div class="dcard" style="border-left:4px solid ${d.c}">
+        <div class="dn" style="color:${d.c}">${d.n[lang]||d.n.en}</div>
+        <div style="font-size:11px;color:var(--mut);margin-bottom:6px;">${L.aiConf}: ${conf}%</div>
+        <div style="font-size:12px;font-weight:700;color:var(--mut);margin-bottom:3px;">${L.symptoms}:</div>
+        <div class="dsym">${d.s[lang]||d.s.en}</div>
+        <div class="dsol">
+          <div class="dst">🌿 ${L.natSol}:</div>
+          <div class="dsb">${d.sol[lang]||d.sol.en}</div>
+        </div>
+      </div>`;
+    speak((d.n[lang]||d.n.en)+'. '+(d.sol[lang]||d.sol.en));
+  }
+}
+function diagSoil(){
+  stopCam();document.getElementById('capBtn').style.display='none';document.getElementById('soilBtn').style.display='none';
+  const s=SOILTYPES[Math.floor(Math.random()*SOILTYPES.length)];
+  const conf=(70+Math.random()*22).toFixed(0);
+  const L=T[lang];
+  document.getElementById('disOut').innerHTML=`<div class="dcard" style="border-left:4px solid ${s.c}"><div class="dn" style="color:${s.c}">${L.soilDetTitle}: ${s.n}</div><div style="font-size:11px;color:var(--mut);margin-bottom:8px;">${L.aiConf}: ${conf}%</div><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><div style="width:36px;height:36px;border-radius:50%;background:${s.c};flex-shrink:0;border:2px solid rgba(0,0,0,.1);"></div><div style="font-size:13px;color:var(--txt);">${s.desc}</div></div><div style="background:#e8f5e9;border-radius:8px;padding:10px;"><div style="font-size:12px;font-weight:700;color:var(--g);margin-bottom:4px;">🌱 ${L.bestCropsLbl}:</div><div style="font-size:13px;color:var(--txt);">${s.crops}</div></div></div>`;
+  speak(L.soilDetTitle+': '+s.n+'. Best crops: '+s.crops);
+}
+function stopCam(){if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}}
+
+// ════ LIVE WEATHER (Open-Meteo, free, no key) ════
+const WTIP={
+  rain:{kn:'ಭಾರೀ ಮಳೆ. ಚರಂಡಿ ಮಾಡಿ. ಇಂದು ಬಿತ್ತನೆ ಬೇಡ.',hi:'भारी बारिश. जल निकासी करें। बुवाई न करें।',ta:'கனமழை. வடிகால் ஏற்பாடு. விதைக்க வேண்டாம்.',te:'భారీ వర్షం. మురుగు వ్యవస్థ. విత్తనాలు వేయకండి.',en:'Heavy rain. Ensure drainage. Do not sow today.'},
+  hot:{kn:'ಬಿಸಿ ಹವಾಮಾನ. ಬೆಳಿಗ್ಗೆ ಅಥವಾ ಸಂಜೆ ನೀರು ಹಾಕಿ.',hi:'गर्म मौसम. सुबह या शाम पानी दें।',ta:'வெப்பம். காலை அல்லது மாலை நீர் பாய்ச்சவும்.',te:'వేడి. ఉదయం లేదా సాయంత్రం నీళ్ళు పోయండి.',en:'Hot weather. Water crops early morning or evening.'},
+  good:{kn:'ಉತ್ತಮ ಹವಾಮಾನ. ಬಿತ್ತನೆ, ಸಿಂಪಡಿಸುವಿಕೆ ಮತ್ತು ಕೊಯ್ಲಿಗೆ ಸೂಕ್ತ.',hi:'अच्छा मौसम. बुवाई, स्प्रे और कटाई के लिए आदर्श।',ta:'நல்ல வானிலை. விதைப்பு, தெளிப்பு, அறுவடைக்கு சிறந்தது.',te:'మంచి వాతావరణం. విత్తనాలు, పిచికారీ, కోతకు అనుకూలం.',en:'Good weather. Ideal for sowing, spraying and harvesting.'},
+  cold:{kn:'ಚಳಿ. ಸಣ್ಣ ಗಿಡ ರಾತ್ರಿ ಮುಚ್ಚಿ.',hi:'ठंड. रात में पौधों को कपड़े से ढकें।',ta:'குளிர். இரவில் செடிகளை மூடுங்கள்.',te:'చల్లది. రాత్రి మొక్కలను కప్పండి.',en:'Cold. Cover young plants with cloth tonight.'},
+  humid:{kn:'ಹೆಚ್ಚಿನ ಆರ್ದ್ರತೆ. ಬೇವಿನ ಎಣ್ಣೆ ಸ್ಪ್ರೇ ಮಾಡಿ.',hi:'अधिक नमी. नीम तेल स्प्रे करें।',ta:'ஈரப்பதம். வேப்ப எண்ணெய் தெளிக்கவும்.',te:'తేమ. వేప నూనె పిచికారీ.',en:'High humidity. Spray neem oil to prevent fungal disease.'},
+};
+const WIC=c=>{if(c===0)return'☀️';if(c<=2)return'🌤️';if(c<=3)return'☁️';if(c<=49)return'🌫️';if(c<=69)return'🌧️';if(c<=82)return'🌧️';return'⛈️';};
+const WCN={0:'Clear Sky',2:'Partly Cloudy',3:'Overcast',45:'Foggy',61:'Rain',80:'Rain Showers',95:'Thunderstorm'};
+const DLB={kn:['ಇಂದು','ನಾಳೆ','3ನೇ ದಿನ'],hi:['आज','कल','तीसरा दिन'],ta:['இன்று','நாளை','3ம் நாள்'],te:['ఈరోజు','రేపు','3వ రోజు'],en:['Today','Tomorrow','Day 3']};
+const ALB={kn:'🌾 ಕೃಷಿ ಸಲಹೆ',hi:'🌾 खेती सलाह',ta:'🌾 விவசாய ஆலோசனை',te:'🌾 వ్యవసాయ సలహా',en:'🌾 Farming Advice'};
+const LLB={kn:'ಹವಾಮಾನ ಲೋಡ್ ಆಗುತ್ತಿದೆ...',hi:'मौसम लोड हो रहा है...',ta:'வானிலை ஏற்றப்படுகிறது...',te:'వాతావరణం లోడ్ అవుతుంది...',en:'Loading live weather...'};
+
+async function drawWx(lat,lon,loc){
+  const div=document.getElementById('wxOut');
+  try{
+    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,rain,wind_speed_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code&timezone=auto&forecast_days=3`);
+    const d=await r.json();
+    const cu=d.current,dl=d.daily;
+    const temp=Math.round(cu.temperature_2m),hum=cu.relative_humidity_2m,rain=cu.rain||0,wind=Math.round(cu.wind_speed_10m),wc=cu.weather_code;
+    let tk='good';
+    if(rain>5||wc>=60)tk='rain';else if(temp>38)tk='hot';else if(temp<12)tk='cold';else if(hum>85)tk='humid';
+    const tip=WTIP[tk][lang]||WTIP[tk].en;
+    const days=DLB[lang]||DLB.en;
+    const fc=dl.weather_code.slice(0,3).map((wcode,i)=>{
+      const mx=Math.round(dl.temperature_2m_max[i]),mn=Math.round(dl.temperature_2m_min[i]),pr=dl.precipitation_sum[i].toFixed(1);
+      return `<div style="background:#f0f4ff;border-radius:9px;padding:10px;text-align:center;"><div style="font-size:26px;">${WIC(wcode)}</div><div style="font-size:11px;font-weight:700;color:var(--bl);">${days[i]}</div><div style="font-size:14px;font-weight:700;">${mx}°/${mn}°C</div><div style="font-size:10px;color:var(--mut);">💧${pr}mm</div></div>`;
+    }).join('');
+    div.innerHTML=`<div class="wxc"><div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;"><div style="font-size:56px;">${WIC(wc)}</div><div><div style="font-size:32px;font-weight:700;color:var(--bl);">${temp}°C</div><div style="font-size:14px;font-weight:700;">${WCN[wc]||'Clear'}</div><div style="font-size:11px;color:var(--mut);">💧${hum}%  🌬️${wind}km/h  📍${loc}</div></div></div><div style="background:#e8f5e9;border-radius:10px;padding:12px;"><div style="font-size:12px;font-weight:700;color:var(--g);margin-bottom:4px;">${ALB[lang]||ALB.en}:</div><div style="font-size:14px;">${tip}</div></div></div><div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;margin:10px 0 7px;">📅 ${days[0]} / ${days[1]} / ${days[2]}</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">${fc}</div>${rain>3?`<div class="wxc" style="border-left-color:#c62828;background:#ffebee;"><div style="font-weight:700;color:#c62828;">⚠️ Rain: ${rain.toFixed(1)}mm</div><div style="font-size:12px;margin-top:4px;">${WTIP.rain[lang]||WTIP.rain.en}</div></div>`:''}`;
+    speakSmart(tip, WTIP[tk].en, VOICE_LANG[lang]||'en-IN', null);
+  }catch(e){div.innerHTML='<div class="wxc"><div style="font-size:14px;color:var(--bl);">⚠️ Weather unavailable. Check internet.</div></div>';}
+}
+
+function renderWx(){
+  const div=document.getElementById('wxOut');
+  div.innerHTML=`<div class="wxc" style="text-align:center;padding:24px;"><div style="font-size:40px;">🌍</div><div style="font-size:14px;font-weight:700;color:var(--bl);margin-top:10px;">${LLB[lang]||LLB.en}</div></div>`;
+  const ipF=()=>fetch('https://ipapi.co/json/').then(r=>r.json()).then(d=>{if(d.latitude)drawWx(d.latitude,d.longitude,d.city+', '+(d.region||''));else div.innerHTML='<div class="wxc"><div>Allow location for live weather.</div></div>';}).catch(()=>{div.innerHTML='<div class="wxc"><div>Check internet.</div></div>';});
+  if(!navigator.geolocation){ipF();return;}
+  navigator.geolocation.getCurrentPosition(p=>drawWx(p.coords.latitude,p.coords.longitude,'Your Location'),()=>ipF(),{timeout:6000});
+}
+
+// ════ VOICE FAB ════
+function toggleVoice(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){speak('Voice not supported');return;}
+  if(recog){recog.stop();recog=null;setFab(false);return;}
+
+  // First speak current screen guidance
+  const L=T[lang];
+  const activePanel=document.querySelector('.panel.active');
+  if(!activePanel){
+    // On main menu — speak all options
+    speak(L.welcome+'. '+L.M1+'. '+L.M2+'. '+L.M3+'. '+L.M4+'. '+L.M5+'. '+L.M6, T.en.welcome+'. '+T.en.M1+'. '+T.en.M2+'. '+T.en.M3+'. '+T.en.M4+'. '+T.en.M5+'. '+T.en.M6);
+  } else {
+    const pid=activePanel.id.replace('panel-','');
+    if(pid==='add') speak(L.PT1+'. '+L.LC+'. '+L.LSS+'. '+L.LAC, T.en.PT1+'. '+T.en.LC+'. '+T.en.LSS+'. '+T.en.LAC);
+    else if(pid==='crops') speak(L.PT2+'. '+L.totalProfit, T.en.PT2+'. '+T.en.totalProfit);
+    else if(pid==='market') speak(L.PT3, T.en.PT3);
+    else if(pid==='ai') speak(L.PT4+'. '+L.predYield+'. '+L.bestCrop, T.en.PT4+'. '+T.en.predYield+'. '+T.en.bestCrop);
+    else if(pid==='camera') speak(L.PT5, T.en.PT5);
+    else if(pid==='weather') speak(L.PT6, T.en.PT6);
+  }
+
+  // Then start listening after 3 seconds
+  setTimeout(()=>{
+    recog=new SR();
+    const vl={en:'en-IN',hi:'hi-IN',kn:'kn-IN',ta:'ta-IN',te:'te-IN'};
+    recog.lang=vl[lang]||'en-IN';
+    setFab(true);showVS(L.listening);
+    recog.onresult=e=>{const s=e.results[0][0].transcript.toLowerCase();recog=null;setFab(false);hideVS();handleCmd(s);};
+    recog.onerror=()=>{recog=null;setFab(false);hideVS();};
+    recog.start();
+  },3000);
+}
+function handleCmd(s){const L=T[lang];if(s.includes('add')||s.includes('crop')||s.includes('ಬೆಳೆ')||s.includes('फसल')||s.includes('பயிர்')||s.includes('పంట')){showPanel('add');speak(L.PT1);}else if(s.includes('market')||s.includes('price')||s.includes('ಬೆಲೆ')||s.includes('भाव')||s.includes('விலை')||s.includes('ధర')){showPanel('market');speak(L.PT3);}else if(s.includes('ai')||s.includes('predict')||s.includes('ಮುನ್ಸೂಚ')||s.includes('भविष्य')){showPanel('ai');speak(L.PT4);}else if(s.includes('camera')||s.includes('plant')||s.includes('soil')||s.includes('doctor')){showPanel('camera');speak(L.PT5);}else if(s.includes('weather')||s.includes('rain')||s.includes('ಹವಾಮಾನ')||s.includes('मौसम')){showPanel('weather');speak(L.PT6);}else if(s.includes('back')||s.includes('home')||s.includes('ಹಿಂದೆ')||s.includes('वापस')){goBack();}else speak(L.M1+', '+L.M3+', '+L.M4+', '+L.M5);}
+function voiceFill(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){alert('Voice not supported');return;}const r=new SR();const vl={en:'en-IN',hi:'hi-IN',kn:'kn-IN',ta:'ta-IN',te:'te-IN'};r.lang=vl[lang]||'en-IN';showVS(T[lang].listening);r.onresult=e=>{const s=e.results[0][0].transcript.toLowerCase();hideVS();PLANTS.forEach(p=>{if(s.includes(p.en.toLowerCase())||s.includes((p[lang]||'').toLowerCase()))pickP(p.id);});const ns=s.match(/\d+/g);if(ns&&ns[0])document.getElementById('inAc').value=ns[0];if(ns&&ns[1])calc();};r.onerror=()=>hideVS();r.start();}
+
+// ════ SPEAK ════
+function speak(t, engFallback){
+  if(!t) return;
+  // If engFallback provided, use speakSmart
+  // Otherwise just use speakInLang (t is already English)
+  if(engFallback){
+    speakSmart(t, engFallback, VOICE_LANG[lang]||'en-IN', null);
+  } else {
+    speakInLang(t, VOICE_LANG[lang]||'en-IN', null);
+  }
+}
+function setFab(on){const f=document.getElementById('fab');f.classList.toggle('on',on);f.textContent=on?'🔴':'🎤';}
+function showVS(m){const v=document.getElementById('vs');v.textContent=m;v.style.display='block';}
+function hideVS(){document.getElementById('vs').style.display='none';}
+</script>
+</body>
+</html>
